@@ -1,11 +1,18 @@
 import React from "react";
-import { format } from "date-fns";
+import { format, differenceInMinutes } from "date-fns";
 import { CheckCircle, XCircle } from "lucide-react";
 
 interface TimeDisplayResult {
     shouldStrikethrough: boolean;
     strikethroughTime: string | null;
     displayTime: string;
+    timeDate: Date; // Add actual Date object for time difference calculation
+}
+
+function formatTimeDifference(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h ${remainingMinutes}m`;
 }
 
 function calculateTimeDisplay(
@@ -23,6 +30,7 @@ function calculateTimeDisplay(
                     shouldStrikethrough: false,
                     strikethroughTime: null,
                     displayTime: format(actualTime, "HH:mm"),
+                    timeDate: actualTime,
                 };
             } else {
                 // Updated doesn't match actual, show updated strikethrough and actual
@@ -30,14 +38,16 @@ function calculateTimeDisplay(
                     shouldStrikethrough: true,
                     strikethroughTime: format(updatedTime, "HH:mm"),
                     displayTime: format(actualTime, "HH:mm"),
+                    timeDate: actualTime,
                 };
             }
         }
-        // No updated time, show actual only
+        // No updated time, show planned strikethrough and actual
         return {
-            shouldStrikethrough: false,
-            strikethroughTime: null,
+            shouldStrikethrough: true,
+            strikethroughTime: format(plannedTime, "HH:mm"),
             displayTime: format(actualTime, "HH:mm"),
+            timeDate: actualTime,
         };
     }
 
@@ -48,6 +58,7 @@ function calculateTimeDisplay(
             shouldStrikethrough: true,
             strikethroughTime: format(plannedTime, "HH:mm"),
             displayTime: format(updatedTime, "HH:mm"),
+            timeDate: updatedTime,
         };
     }
 
@@ -56,6 +67,7 @@ function calculateTimeDisplay(
         shouldStrikethrough: false,
         strikethroughTime: null,
         displayTime: format(plannedTime, "HH:mm"),
+        timeDate: plannedTime,
     };
 }
 
@@ -151,92 +163,105 @@ const OrderCard: React.FC<OrderCardProps> = ({
             {/* Time Section */}
             <div className="p-4 border-t border-b border-gray-200">
                 <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                        <div>
-                            <div className="flex flex-col">
-                                {(() => {
-                                    const startResult = calculateTimeDisplay(
-                                        startDate,
-                                        updatedStartDate,
-                                        actualStartDate
-                                    );
-                                    return (
-                                        <>
-                                            {startResult.shouldStrikethrough &&
-                                                startResult.strikethroughTime && (
-                                                    <div className="text-lg line-through text-gray-400">
+                    <div className="flex items-center gap-4 flex-1">
+                        {(() => {
+                            const startResult = calculateTimeDisplay(
+                                startDate,
+                                updatedStartDate,
+                                actualStartDate
+                            );
+                            const endResult = calculateTimeDisplay(
+                                endDate,
+                                updatedEndDate,
+                                actualEndDate
+                            );
+                            const timeDiff = formatTimeDifference(
+                                differenceInMinutes(
+                                    endResult.timeDate,
+                                    startResult.timeDate
+                                )
+                            );
+                            return (
+                                <>
+                                    <div className="flex items-center gap-4">
+                                        <div>
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-2 min-w-[90px]">
+                                                    {startResult.shouldStrikethrough &&
+                                                        startResult.strikethroughTime && (
+                                                            <div className="text-lg line-through text-gray-400">
+                                                                {
+                                                                    startResult.strikethroughTime
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    <div
+                                                        className={`text-lg ${
+                                                            startResult.shouldStrikethrough
+                                                                ? "text-green-600"
+                                                                : ""
+                                                        }`}
+                                                    >
                                                         {
-                                                            startResult.strikethroughTime
+                                                            startResult.displayTime
                                                         }
                                                     </div>
-                                                )}
-                                            <div
-                                                className={`text-lg ${
-                                                    actualStartDate
-                                                        ? "text-green-600"
-                                                        : ""
-                                                }`}
-                                            >
-                                                {startResult.displayTime}
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    {format(
+                                                        startDate,
+                                                        "dd/MM/yy"
+                                                    )}
+                                                </div>
                                             </div>
-                                        </>
-                                    );
-                                })()}
-                                <div className="text-sm text-gray-500">
-                                    {format(startDate, "dd/MM/yy")}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="text-gray-400">→</div>
-                        <div>
-                            <div className="flex flex-col">
-                                {(() => {
-                                    const endResult = calculateTimeDisplay(
-                                        endDate,
-                                        updatedEndDate,
-                                        actualEndDate
-                                    );
-                                    return (
-                                        <>
-                                            {endResult.shouldStrikethrough &&
-                                                endResult.strikethroughTime && (
-                                                    <div className="text-lg line-through text-gray-400">
-                                                        {
-                                                            endResult.strikethroughTime
-                                                        }
+                                        </div>
+                                        <div className="text-gray-400">→</div>
+                                        <div>
+                                            <div className="flex flex-col">
+                                                <div className="flex items-center gap-2 min-w-[90px]">
+                                                    {endResult.shouldStrikethrough &&
+                                                        endResult.strikethroughTime && (
+                                                            <div className="text-lg line-through text-gray-400">
+                                                                {
+                                                                    endResult.strikethroughTime
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    <div
+                                                        className={`text-lg ${
+                                                            endResult.shouldStrikethrough
+                                                                ? "text-green-600"
+                                                                : ""
+                                                        }`}
+                                                    >
+                                                        {endResult.displayTime}
                                                     </div>
-                                                )}
-                                            <div
-                                                className={`text-lg ${
-                                                    actualEndDate
-                                                        ? "text-green-600"
-                                                        : ""
-                                                }`}
-                                            >
-                                                {endResult.displayTime}
+                                                </div>
+                                                <div className="text-sm text-gray-500">
+                                                    {format(
+                                                        endDate,
+                                                        "dd/MM/yy"
+                                                    )}
+                                                </div>
                                             </div>
-                                        </>
-                                    );
-                                })()}
-                                <div className="text-sm text-gray-500">
-                                    {format(endDate, "dd/MM/yy")}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                        <div>
-                            <span className="text-blue-800 font-semibold text-base">
-                                {operationCounter}
-                            </span>
-                            <span className="text-gray-500 text-sm">
-                                {" "}
-                                Operation
-                            </span>
-                        </div>
-                        <span className="text-gray-500 text-sm">
-                            {timeLeft}
-                        </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-end flex-1 justify-end">
+                                        <div className="flex items-center">
+                                            <span className="text-blue-800 font-semibold text-base">
+                                                {operationCounter}
+                                            </span>
+                                            <span className="text-gray-500 text-sm ml-1">
+                                                Operation
+                                            </span>
+                                        </div>
+                                        <span className="text-gray-500 text-sm">
+                                            {timeDiff}
+                                        </span>
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
                 </div>
             </div>

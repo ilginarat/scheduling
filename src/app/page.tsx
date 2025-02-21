@@ -75,7 +75,7 @@ export default function Home() {
 
                         {/* Right Side - Order Cards */}
                         <div
-                            className={`fixed right-0 top-16 bottom-0 w-[450px] bg-white shadow-xl py-8 px-6 overflow-y-auto transition-transform duration-300 ease-in-out z-40 ${
+                            className={`fixed right-0 top-16 bottom-0 w-[500px] bg-white shadow-xl py-8 px-6 overflow-y-auto transition-transform duration-300 ease-in-out z-40 ${
                                 isOrdersOpen
                                     ? "translate-x-0"
                                     : "translate-x-full"
