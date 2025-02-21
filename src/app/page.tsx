@@ -24,15 +24,21 @@ export default function Home() {
     const dummyCards = generateDummyWorkCenterOrders(3);
 
     return (
-        <main className="min-h-screen p-8 bg-gray-100">
-            <div className="max-w-2xl mx-auto space-y-4">
-                {dummyCards.map((card: WorkCenterOrder, index: number) => (
-                    <OrderCard
-                        key={index}
-                        {...mapWorkCenterOrderToCardProps(card)}
-                    />
-                ))}
+        <div className="flex h-screen bg-gray-100">
+            {/* Left side - can be used for other content */}
+            <div className="w-3/4">{/* Left side content */}</div>
+
+            {/* Right side - Cards on white board */}
+            <div className="w-1/4 bg-white shadow-lg py-8 px-2 overflow-y-auto">
+                <div className="space-y-4">
+                    {dummyCards.map((card: WorkCenterOrder, index: number) => (
+                        <OrderCard
+                            key={index}
+                            {...mapWorkCenterOrderToCardProps(card)}
+                        />
+                    ))}
+                </div>
             </div>
-        </main>
+        </div>
     );
 }
