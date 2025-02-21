@@ -25,6 +25,11 @@ export function generateDummyWorkCenterOrder(
     const plannedStart = generateRandomDate(now, futureDate);
     const plannedEnd = generateRandomDate(new Date(plannedStart), futureDate);
 
+    // Generate target quantity first
+    const targetQuantity = Math.floor(Math.random() * 1000) + 1;
+    // Generate confirmed quantity as a random portion of target quantity
+    const confirmedQuantity = Math.floor(Math.random() * targetQuantity);
+
     return {
         order_number:
             orderNumber ||
@@ -44,8 +49,8 @@ export function generateDummyWorkCenterOrder(
             Math.random() * 100
         )}`,
         operation_status: getRandomElement(operationStatuses),
-        target_quantity: Math.floor(Math.random() * 1000) + 1,
-        confirmed_quantity: Math.floor(Math.random() * 1000),
+        target_quantity: targetQuantity,
+        confirmed_quantity: confirmedQuantity,
         component_check: Math.random() > 0.5,
         demand_check: Math.random() > 0.5,
         production_resource_tool_check: Math.random() > 0.5,
