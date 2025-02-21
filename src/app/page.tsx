@@ -19,6 +19,14 @@ const mapWorkCenterOrderToCardProps = (order: WorkCenterOrder) => {
         demandCheck: order.demand_check,
         startDate: new Date(order.planned_start_time),
         endDate: new Date(order.planned_end_time),
+        updatedStartDate: new Date(order.updated_start_time),
+        updatedEndDate: new Date(order.updated_end_time),
+        actualStartDate: order.actual_start_time
+            ? new Date(order.actual_start_time)
+            : undefined,
+        actualEndDate: order.actual_end_time
+            ? new Date(order.actual_end_time)
+            : undefined,
         ordNum: order.target_quantity,
         materialNumber: order.material_number,
         targetQuantity: order.target_quantity,
