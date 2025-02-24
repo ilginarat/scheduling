@@ -135,56 +135,52 @@ export default function Home() {
                                 }}
                             >
                                 {/* Scheduling Cards Container */}
-                                <div className="relative h-[120px] py-6 w-[1299px]">
-                                    <div className="absolute left-8 right-8">
-                                        {sortedOrders.map((order, index) => (
-                                            <div
-                                                key={order.order_number}
-                                                className="absolute"
-                                                style={{
-                                                    left:
-                                                        index * (200 + 16) +
-                                                        "px",
-                                                }}
-                                            >
-                                                <SchedulingCard
-                                                    name={order.order_number}
-                                                    confirmedQuantity={
-                                                        order.confirmed_quantity
-                                                    }
-                                                    targetQuantity={
-                                                        order.target_quantity
-                                                    }
-                                                    startDate={
-                                                        new Date(
-                                                            order.planned_start_time
-                                                        )
-                                                    }
-                                                    endDate={
-                                                        new Date(
-                                                            order.planned_end_time
-                                                        )
-                                                    }
-                                                    isSelected={
+                                <div className="p-4 flex flex-col gap-4 ">
+                                    {sortedOrders.map((order, index) => (
+                                        <div
+                                            key={order.order_number}
+                                            className=""
+                                            style={{
+                                                left: index * (200 + 16) + "px",
+                                            }}
+                                        >
+                                            <SchedulingCard
+                                                name={order.order_number}
+                                                confirmedQuantity={
+                                                    order.confirmed_quantity
+                                                }
+                                                targetQuantity={
+                                                    order.target_quantity
+                                                }
+                                                startDate={
+                                                    new Date(
+                                                        order.planned_start_time
+                                                    )
+                                                }
+                                                endDate={
+                                                    new Date(
+                                                        order.planned_end_time
+                                                    )
+                                                }
+                                                isSelected={
+                                                    selectedOrder?.order_number ===
+                                                    order.order_number
+                                                }
+                                                onSelect={() => {
+                                                    if (
                                                         selectedOrder?.order_number ===
                                                         order.order_number
-                                                    }
-                                                    onSelect={() => {
-                                                        if (
-                                                            selectedOrder?.order_number ===
+                                                    ) {
+                                                        clearSelectedOrder();
+                                                    } else {
+                                                        selectOrder(
                                                             order.order_number
-                                                        ) {
-                                                            clearSelectedOrder();
-                                                        } else {
-                                                            selectOrder(
-                                                                order.order_number
-                                                            );
-                                                        }
-                                                    }}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
+                                                        );
+                                                    }
+                                                }}
+                                            />
+                                        </div>
+                                    ))}
                                 </div>
                             </div>
                         </div>
