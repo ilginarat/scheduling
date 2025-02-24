@@ -105,7 +105,7 @@ export default function Home() {
 
                             {/* Timeline Container */}
                             <div
-                                className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-scroll"
+                                className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                                 style={{
                                     width: isOrdersOpen
                                         ? "calc(100% - 500px)"

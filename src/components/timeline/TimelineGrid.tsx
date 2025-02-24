@@ -134,8 +134,10 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
         groups: DateGroup[]
     ) => {
         if (scale < 33) {
-            // Hour view: always maintain space for date
-            const startTime = format(group.start, "HH:mm");
+            // Hour view: show end time only for multi-hour slots
+            const startTime = format(group.start, "H");
+            const endTime = format(group.end, "H");
+            const isMultiHour = startTime !== endTime;
             const isNewDay =
                 index === 0 ||
                 format(group.start, "yyyy-MM-dd") !==
@@ -143,7 +145,10 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
 
             return (
                 <span className="inline-flex flex-col h-[38px] justify-center">
-                    <span>{startTime}</span>
+                    <span>
+                        {startTime}
+                        {isMultiHour ? ` - ${endTime}` : ""}
+                    </span>
                     <span className="text-xs text-gray-500 h-4">
                         {isNewDay ? format(group.start, "MMM d") : "\u00A0"}
                     </span>
@@ -175,9 +180,9 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
     const timeSlots = generateTimeSlots();
 
     return (
-        <div className="flex flex-col h-full ">
+        <div className="flex flex-col h-full">
             {/* Scale Slider */}
-            <div className="px-4 py-2 border-b border-gray-200">
+            <div className="px-4 py-2 border-b border-gray-200 shrink-0">
                 <input
                     type="range"
                     min="0"
@@ -194,59 +199,61 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
             </div>
 
             {/* Timeline Grid */}
-            <div
-                ref={gridRef}
-                className="relative flex-1 bg-white-400 w-[1299px]"
-            >
-                {/* Header with date labels */}
-                <div className="flex border-b border-gray-200 transition-all duration-200 ">
-                    <div className="flex" style={{ width: "100%" }}>
-                        {visibleGroups.map((group, index) => (
-                            <div
-                                key={index}
-                                className="text-center transition-all duration-200"
-                                style={{
-                                    width: `${100 / visibleGroups.length}%`,
-                                    minWidth: "fit-content",
-                                    padding: "0.25rem 0.5rem",
-                                }}
-                            >
-                                <div className="text-sm font-medium whitespace-nowrap">
-                                    {formatDateLabel(
-                                        group,
-                                        index,
-                                        visibleGroups
-                                    )}
+            <div className="flex-1 overflow-x-auto">
+                <div
+                    ref={gridRef}
+                    className="relative bg-white w-[1299px] h-full"
+                >
+                    {/* Header with date labels */}
+                    <div className="flex border-b border-gray-200 transition-all duration-200">
+                        <div className="flex" style={{ width: "100%" }}>
+                            {visibleGroups.map((group, index) => (
+                                <div
+                                    key={index}
+                                    className="text-center transition-all duration-200"
+                                    style={{
+                                        width: `${100 / visibleGroups.length}%`,
+                                        minWidth: "fit-content",
+                                        padding: "0.25rem 0.5rem",
+                                    }}
+                                >
+                                    <div className="text-sm font-medium whitespace-nowrap">
+                                        {formatDateLabel(
+                                            group,
+                                            index,
+                                            visibleGroups
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Grid container */}
-                <div className="flex h-[calc(100%-32px)] relative ">
-                    {/* Vertical grid lines */}
-                    <div className="flex w-full transition-all duration-200">
-                        {visibleGroups.map((_, index) => (
-                            <div
-                                key={index}
-                                className="border-l border-gray-100 first:border-l-0 transition-all duration-200"
-                                style={{
-                                    width: `${100 / visibleGroups.length}%`,
-                                }}
-                            />
-                        ))}
+                            ))}
+                        </div>
                     </div>
 
-                    {/* Horizontal grid lines */}
-                    <div className="absolute inset-x-0 top-8 bottom-0">
-                        {[...Array(24)].map((_, index) => (
-                            <div
-                                key={index}
-                                className="border-b border-gray-50"
-                                style={{ height: `${100 / 24}%` }}
-                            />
-                        ))}
+                    {/* Grid container */}
+                    <div className="flex h-[calc(100%-32px)] relative">
+                        {/* Vertical grid lines */}
+                        <div className="flex w-full transition-all duration-200">
+                            {visibleGroups.map((_, index) => (
+                                <div
+                                    key={index}
+                                    className="border-l border-gray-100 first:border-l-0 transition-all duration-200"
+                                    style={{
+                                        width: `${100 / visibleGroups.length}%`,
+                                    }}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Horizontal grid lines */}
+                        <div className="absolute inset-x-0 top-8 bottom-0">
+                            {[...Array(24)].map((_, index) => (
+                                <div
+                                    key={index}
+                                    className="border-b border-gray-50"
+                                    style={{ height: `${100 / 24}%` }}
+                                />
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
