@@ -56,8 +56,13 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
                 });
             }
         } else if (scaleValue < 66) {
-            // Day view
-            columnsToShow = Math.floor(7 * ((scaleValue - 33) / 33)); // 7 to 14 days
+            // Day view - smooth transition from 3 to 14 days
+            const minDays = 3;
+            const maxDays = 14;
+            const normalizedScale = (scaleValue - 33) / 33; // 0 to 1
+            columnsToShow = Math.floor(
+                minDays + (maxDays - minDays) * normalizedScale
+            );
             const startDay = addDays(today, -Math.floor(columnsToShow / 2));
 
             for (let i = 0; i < columnsToShow; i++) {
@@ -170,7 +175,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
     const timeSlots = generateTimeSlots();
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full ">
             {/* Scale Slider */}
             <div className="px-4 py-2 border-b border-gray-200">
                 <input
@@ -191,10 +196,10 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
             {/* Timeline Grid */}
             <div
                 ref={gridRef}
-                className="relative flex-1 bg-white overflow-hidden"
+                className="relative flex-1 bg-white-400 w-[1299px]"
             >
                 {/* Header with date labels */}
-                <div className="flex border-b border-gray-200 transition-all duration-200 overflow-hidden">
+                <div className="flex border-b border-gray-200 transition-all duration-200 ">
                     <div className="flex" style={{ width: "100%" }}>
                         {visibleGroups.map((group, index) => (
                             <div
@@ -219,7 +224,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
                 </div>
 
                 {/* Grid container */}
-                <div className="flex h-[calc(100%-32px)] relative overflow-hidden">
+                <div className="flex h-[calc(100%-32px)] relative ">
                     {/* Vertical grid lines */}
                     <div className="flex w-full transition-all duration-200">
                         {visibleGroups.map((_, index) => (
