@@ -10,8 +10,14 @@ interface TimeDisplayResult {
 }
 
 function formatTimeDifference(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
+    const days = Math.floor(minutes / (24 * 60));
+    const remainingMinutesAfterDays = minutes % (24 * 60);
+    const hours = Math.floor(remainingMinutesAfterDays / 60);
+    const remainingMinutes = remainingMinutesAfterDays % 60;
+
+    if (days > 0) {
+        return `${days}d ${hours}h ${remainingMinutes}m`;
+    }
     return `${hours}h ${remainingMinutes}m`;
 }
 
@@ -138,7 +144,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 <div className="flex justify-between items-start">
                     <h2 className="text-xl font-bold">{name}</h2>
                     <div
-                        className={`px-2.5 py-0.5 rounded text-xs font-semibold ${
+                        className={`px-4 py-1 rounded text-xs font-semibold ${
                             confirmedQuantity >= 0
                                 ? "bg-green-600 text-white"
                                 : "border border-dashed border-gray-300 text-gray-500 bg-white"
@@ -268,13 +274,13 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
             {/* Status Section */}
             <div className="p-4 flex gap-6 items-center bg-gray-50">
-                <div className="flex items-center gap-2 mr-8">
+                <div className="flex items-center gap-2 mr-24">
                     <div
                         className={`w-5 h-5 rounded flex items-center justify-center ${
                             ifPRT ? "bg-blue-800" : "bg-gray-200"
                         }`}
                     >
-                        {ifPRT && <span className="text-white text-sm">✓</span>}
+                        <span className="text-white text-sm">✓</span>
                     </div>
                     <span className="text-base text-gray-500">PRT</span>
                 </div>
