@@ -129,29 +129,25 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
         groups: DateGroup[]
     ) => {
         if (scale < 33) {
-            // Hour view: show only start time and date when crossing to a new day
+            // Hour view: always maintain space for date
             const startTime = format(group.start, "HH:mm");
-
-            // Check if this is the first group or if the day has changed from the previous group
             const isNewDay =
                 index === 0 ||
                 format(group.start, "yyyy-MM-dd") !==
                     format(groups[index - 1].start, "yyyy-MM-dd");
 
             return (
-                <span className="inline-flex flex-col">
+                <span className="inline-flex flex-col h-[38px] justify-center">
                     <span>{startTime}</span>
-                    {isNewDay && (
-                        <span className="text-xs text-gray-500">
-                            {format(group.start, "MMM d")}
-                        </span>
-                    )}
+                    <span className="text-xs text-gray-500 h-4">
+                        {isNewDay ? format(group.start, "MMM d") : "\u00A0"}
+                    </span>
                 </span>
             );
         } else if (scale < 66) {
-            // Day view: show date with day
+            // Day view: show date with day indicator
             return (
-                <span className="inline-flex items-center gap-1">
+                <span className="inline-flex items-center gap-1 h-[38px] justify-center">
                     {format(group.start, "d")}
                     <span className="text-gray-500 text-xs">
                         {format(group.start, "EEEEE")}
@@ -159,10 +155,15 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
                 </span>
             );
         } else {
-            // Month view: show date range if grouped
-            return group.start.getTime() === group.end.getTime()
-                ? format(group.start, "d")
-                : `${format(group.start, "d")}-${format(group.end, "d")}`;
+            // Month view: show only start date with day indicator
+            return (
+                <span className="inline-flex items-center gap-1 h-[38px] justify-center">
+                    {format(group.start, "d")}
+                    <span className="text-gray-500 text-xs">
+                        {format(group.start, "EEEEE")}
+                    </span>
+                </span>
+            );
         }
     };
 
