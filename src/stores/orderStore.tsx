@@ -57,7 +57,7 @@ export const useOrderStore = create<OrderStore>(
 
         updateOrder: (
             orderNumber: string,
-            updatedOrder: Partial<WorkCenterOrder>
+            updatedOrder: Partial<WorkCenterOrder> //means you only need to provide the fields you want to change, not the entire order object
         ) =>
             set((state) => ({
                 orders: state.orders.map((order) =>

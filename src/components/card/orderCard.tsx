@@ -95,6 +95,8 @@ interface OrderCardProps {
     materialNumber: string;
     targetQuantity: number;
     confirmedQuantity: number;
+    isSelected?: boolean;
+    onSelect?: () => void;
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({
@@ -114,6 +116,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
     materialNumber,
     targetQuantity,
     confirmedQuantity,
+    isSelected,
+    onSelect,
 }) => {
     // Calculate progress percentage
     const progressPercentage = (confirmedQuantity / targetQuantity) * 100;
@@ -124,13 +128,19 @@ const OrderCard: React.FC<OrderCardProps> = ({
         if (confirmedQuantity === targetQuantity) return "Completed";
         if (confirmedQuantity > 0 && confirmedQuantity < targetQuantity)
             return "In Production";
-        return "Released";
     };
 
     const status = getStatus();
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div
+            className={`bg-white rounded-lg shadow-sm border transition-colors cursor-pointer ${
+                isSelected
+                    ? "border-blue-800 shadow-md"
+                    : "border-gray-200 hover:border-blue-400"
+            } overflow-hidden`}
+            onClick={onSelect}
+        >
             {/* Progress Bar */}
             <div className="h-1.5 w-full bg-blue-800 flex">
                 <div
@@ -140,9 +150,27 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </div>
 
             {/* Header Section */}
-            <div className="p-4 bg-gray-50">
+            <div
+                className={`p-4 ${
+                    isSelected
+                        ? status === "Released"
+                            ? "bg-blue-50"
+                            : "bg-green-50"
+                        : "bg-gray-50"
+                } transition-colors`}
+            >
                 <div className="flex justify-between items-start">
-                    <h2 className="text-xl font-bold">{name}</h2>
+                    <h2
+                        className={`text-xl font-bold ${
+                            isSelected
+                                ? status === "Released"
+                                    ? "text-blue-800"
+                                    : "text-green-700"
+                                : ""
+                        }`}
+                    >
+                        {name}
+                    </h2>
                     <div
                         className={`px-4 py-1 rounded text-xs font-semibold ${
                             confirmedQuantity >= 0

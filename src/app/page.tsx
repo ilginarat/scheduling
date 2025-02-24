@@ -7,6 +7,7 @@ import { useOrderStore } from "@/stores/orderStore";
 import { useEffect, useState } from "react";
 import { WorkCenterOrder } from "@/lib/orderData/types";
 import { Menu } from "lucide-react";
+import Link from "next/link";
 
 const mapWorkCenterOrderToCardProps = (order: WorkCenterOrder) => {
     return {
@@ -35,7 +36,15 @@ const mapWorkCenterOrderToCardProps = (order: WorkCenterOrder) => {
 };
 
 export default function Home() {
-    const { orders, loadDummyOrders, isLoading, error } = useOrderStore();
+    const {
+        orders,
+        loadDummyOrders,
+        isLoading,
+        error,
+        selectedOrder,
+        selectOrder,
+        clearSelectedOrder,
+    } = useOrderStore();
     const [isOrdersOpen, setIsOrdersOpen] = useState(true);
 
     useEffect(() => {
@@ -51,6 +60,22 @@ export default function Home() {
                     <div className="flex h-full relative">
                         {/* Main Content Area */}
                         <div className="flex-1 p-6">
+                            <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+                                <Link href="/" className="hover:text-gray-700">
+                                    Home
+                                </Link>
+                                <span>/</span>
+                                <Link
+                                    href="/materials"
+                                    className="hover:text-gray-700"
+                                >
+                                    My Materials
+                                </Link>
+                                <span>/</span>
+                                <span className="text-gray-900">
+                                    Machine Scheduling
+                                </span>
+                            </nav>
                             <div className="flex justify-between items-center mb-4">
                                 <h1 className="text-2xl font-semibold">
                                     Machine Scheduling
@@ -109,6 +134,22 @@ export default function Home() {
                                             {...mapWorkCenterOrderToCardProps(
                                                 order
                                             )}
+                                            isSelected={
+                                                selectedOrder?.order_number ===
+                                                order.order_number
+                                            }
+                                            onSelect={() => {
+                                                if (
+                                                    selectedOrder?.order_number ===
+                                                    order.order_number
+                                                ) {
+                                                    clearSelectedOrder();
+                                                } else {
+                                                    selectOrder(
+                                                        order.order_number
+                                                    );
+                                                }
+                                            }}
                                         />
                                     ))}
                                 </div>
