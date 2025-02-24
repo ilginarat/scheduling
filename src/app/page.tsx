@@ -10,7 +10,8 @@ import { Menu } from "lucide-react";
 import Link from "next/link";
 import OrderCards from "@/components/card/cards";
 import TimelineGrid from "@/components/timeline/TimelineGrid";
-import { startOfDay, addDays } from "date-fns";
+import { startOfDay, addDays, differenceInHours } from "date-fns";
+import SchedulingCard from "@/components/card/schedulingCard";
 
 const mapWorkCenterOrderToCardProps = (order: WorkCenterOrder) => {
     return {
@@ -60,6 +61,16 @@ export default function Home() {
     // Timeline dates (you might want to make these dynamic based on your needs)
     const timelineStartDate = startOfDay(new Date());
     const timelineEndDate = addDays(timelineStartDate, 5);
+
+    // Remove the hourColumnWidth and calculateLeftPosition since we're using fixed widths
+    const CARD_SPACING = 16; // Space between cards
+
+    // Sort orders by start date
+    const sortedOrders = [...orders].sort(
+        (a, b) =>
+            new Date(a.planned_start_time).getTime() -
+            new Date(b.planned_start_time).getTime()
+    );
 
     return (
         <div className="flex flex-col h-screen">
@@ -115,7 +126,7 @@ export default function Home() {
 
                             {/* Container Below Timeline */}
                             <div
-                                className="mt-6 h-[250px] bg-white rounded-lg shadow-sm border border-gray-200"
+                                className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto"
                                 style={{
                                     width: isOrdersOpen
                                         ? "calc(100% - 400px)"
@@ -123,7 +134,58 @@ export default function Home() {
                                     transition: "width 300ms ease-in-out",
                                 }}
                             >
-                                {/* Content for the new container will go here */}
+                                {/* Scheduling Cards Container */}
+                                <div className="relative h-[100px] py-8">
+                                    <div className="absolute left-8 right-0">
+                                        {sortedOrders.map((order, index) => (
+                                            <div
+                                                key={order.order_number}
+                                                className="absolute"
+                                                style={{
+                                                    left:
+                                                        index * (200 + 8) +
+                                                        "px",
+                                                }}
+                                            >
+                                                <SchedulingCard
+                                                    name={order.order_number}
+                                                    confirmedQuantity={
+                                                        order.confirmed_quantity
+                                                    }
+                                                    targetQuantity={
+                                                        order.target_quantity
+                                                    }
+                                                    startDate={
+                                                        new Date(
+                                                            order.planned_start_time
+                                                        )
+                                                    }
+                                                    endDate={
+                                                        new Date(
+                                                            order.planned_end_time
+                                                        )
+                                                    }
+                                                    isSelected={
+                                                        selectedOrder?.order_number ===
+                                                        order.order_number
+                                                    }
+                                                    onSelect={() => {
+                                                        if (
+                                                            selectedOrder?.order_number ===
+                                                            order.order_number
+                                                        ) {
+                                                            clearSelectedOrder();
+                                                        } else {
+                                                            selectOrder(
+                                                                order.order_number
+                                                            );
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
