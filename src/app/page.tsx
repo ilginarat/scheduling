@@ -8,6 +8,9 @@ import { useEffect, useState } from "react";
 import { WorkCenterOrder } from "@/lib/orderData/types";
 import { Menu } from "lucide-react";
 import Link from "next/link";
+import OrderCards from "@/components/card/cards";
+import TimelineGrid from "@/components/timeline/TimelineGrid";
+import { startOfDay, addDays } from "date-fns";
 
 const mapWorkCenterOrderToCardProps = (order: WorkCenterOrder) => {
     return {
@@ -46,10 +49,17 @@ export default function Home() {
         clearSelectedOrder,
     } = useOrderStore();
     const [isOrdersOpen, setIsOrdersOpen] = useState(true);
+    const [gridGrain, setGridGrain] = useState<"hour" | "halfDay" | "day">(
+        "hour"
+    );
 
     useEffect(() => {
         loadDummyOrders(3);
     }, [loadDummyOrders]);
+
+    // Timeline dates (you might want to make these dynamic based on your needs)
+    const timelineStartDate = startOfDay(new Date());
+    const timelineEndDate = addDays(timelineStartDate, 5);
 
     return (
         <div className="flex flex-col h-screen">
@@ -76,15 +86,31 @@ export default function Home() {
                                     Machine Scheduling
                                 </span>
                             </nav>
-                            <div className="flex justify-between items-center mb-4">
-                                <h1 className="text-2xl font-semibold">
-                                    Machine Scheduling
+
+                            {/* Machine Info */}
+                            <div className="mb-6">
+                                <h1 className="text-2xl font-semibold mb-2">
+                                    LINE2-MILL-02
                                 </h1>
+                                <div className="flex items-center gap-2">
+                                    <span className="inline-flex items-center gap-1">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        <span className="text-sm">Active</span>
+                                    </span>
+                                </div>
+                                <div className="text-sm text-gray-500 mt-1">
+                                    CW 23
+                                </div>
                             </div>
-                            <p className="text-gray-600 mb-8">
-                                View your machines
-                            </p>
-                            {/* Add your machine scheduling content here */}
+
+                            {/* Timeline Container */}
+                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                                <TimelineGrid
+                                    startDate={timelineStartDate}
+                                    endDate={timelineEndDate}
+                                    gridGrain={gridGrain}
+                                />
+                            </div>
                         </div>
 
                         {/* Toggle Button (visible when panel is closed) */}

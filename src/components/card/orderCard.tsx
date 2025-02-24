@@ -173,9 +173,9 @@ const OrderCard: React.FC<OrderCardProps> = ({
                     </h2>
                     <div
                         className={`px-4 py-1 rounded text-xs font-semibold ${
-                            confirmedQuantity >= 0
-                                ? "bg-green-600 text-white"
-                                : "border border-dashed border-gray-300 text-gray-500 bg-white"
+                            status === "Released"
+                                ? "bg-blue-600 text-white"
+                                : "bg-green-600 text-white"
                         }`}
                     >
                         {status}
