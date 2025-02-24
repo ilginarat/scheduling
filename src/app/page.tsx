@@ -135,15 +135,15 @@ export default function Home() {
                                 }}
                             >
                                 {/* Scheduling Cards Container */}
-                                <div className="relative h-[100px] py-8">
-                                    <div className="absolute left-8 right-0">
+                                <div className="relative h-[120px] py-6 w-[1299px]">
+                                    <div className="absolute left-8 right-8">
                                         {sortedOrders.map((order, index) => (
                                             <div
                                                 key={order.order_number}
                                                 className="absolute"
                                                 style={{
                                                     left:
-                                                        index * (200 + 8) +
+                                                        index * (200 + 16) +
                                                         "px",
                                                 }}
                                             >

@@ -22,39 +22,45 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
     onSelect,
     style,
 }) => {
-    // Calculate progress percentage
-    const progressPercentage = (confirmedQuantity / targetQuantity) * 100;
-
     return (
         <div
-            className={`h-10 w-[200px] absolute rounded transition-colors cursor-pointer overflow-hidden border-r border-gray-200
+            className={`h-[83px] w-[200px] absolute bg-white border border-gray-200 rounded-md cursor-pointer overflow-hidden flex flex-col
                 ${
                     isSelected
-                        ? "ring-2 ring-blue-600 shadow-md"
-                        : "hover:ring-2 hover:ring-blue-400"
+                        ? "ring-2 ring-blue-600"
+                        : "hover:ring-1 hover:ring-gray-300"
                 }`}
             style={style}
             onClick={onSelect}
         >
-            {/* Progress Bar Background */}
-            <div className="absolute inset-0 bg-green-100" />
+            {/* Gray line at the top */}
+            <div className="h-[83px] w-full bg-gray-500 border-b border-gray-500" />
 
-            {/* Progress Bar */}
-            <div
-                className="absolute inset-y-0 left-0 bg-green-500 opacity-30"
-                style={{ width: `${progressPercentage}%` }}
-            />
+            {/* Progress indicator bar */}
+            <div className="h-[4px] w-full relative">
+                <div
+                    className="h-full bg-green-500"
+                    style={{
+                        width: `${(confirmedQuantity / targetQuantity) * 100}%`,
+                    }}
+                />
+                <div
+                    className="absolute top-0 right-0 h-full bg-blue-500"
+                    style={{
+                        width: `${
+                            ((targetQuantity - confirmedQuantity) /
+                                targetQuantity) *
+                            100
+                        }%`,
+                    }}
+                />
+            </div>
 
             {/* Content */}
-            <div className="relative h-full px-2 flex items-center justify-between">
-                <div
-                    className="font-medium text-sm truncate flex-1"
-                    title={name}
-                >
-                    {name}
-                </div>
-                <div className="text-xs text-gray-600 whitespace-nowrap ml-2">
-                    {confirmedQuantity}/{targetQuantity}
+            <div className="p-4 flex flex-col gap-1">
+                <div className="font-semibold text-sm truncate">{name}</div>
+                <div className="text-sm text-gray-600">
+                    {targetQuantity} pcs
                 </div>
             </div>
         </div>
