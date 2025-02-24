@@ -1,21 +1,15 @@
-import React, {
-    useEffect,
-    useRef,
-    useState,
-    WheelEvent,
-    TouchEvent,
-} from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     format,
     addHours,
     startOfDay,
     endOfDay,
+    addDays,
     eachDayOfInterval,
+    addMonths,
 } from "date-fns";
 
 interface TimelineGridProps {
-    startDate: Date;
-    endDate: Date;
     gridGrain: "hour" | "halfDay" | "day";
 }
 
@@ -25,111 +19,93 @@ interface DateGroup {
     end: Date;
 }
 
-const TimelineGrid: React.FC<TimelineGridProps> = ({
-    startDate,
-    endDate,
-    gridGrain,
-}) => {
+const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
     const gridRef = useRef<HTMLDivElement>(null);
     const [visibleGroups, setVisibleGroups] = useState<DateGroup[]>([]);
-    const [scale, setScale] = useState(1);
-    const minDateWidth = 50; // Base width (in pixels) for each column
-    const MIN_SCALE = 0.1;
-    const MAX_SCALE = 3;
+    const [scale, setScale] = useState(50); // Scale from 0 to 100
+    const baseColumnWidth = 50;
 
-    // This ref stores the initial distance between two touch points for pinch gestures.
-    const pinchRef = useRef<number | null>(null);
+    // Calculate dates based on scale value (0-100)
+    // 0: hourly view
+    // 50: daily view
+    // 100: monthly view
+    const calculateVisibleDates = (
+        availableWidth: number,
+        scaleValue: number
+    ) => {
+        const today = startOfDay(new Date());
+        const dates: DateGroup[] = [];
 
-    // Zoom in/out using the mouse wheel (with ctrl/meta key)
-    const handleWheel = (e: WheelEvent<HTMLDivElement>) => {
-        if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            const delta = -e.deltaY;
-            const zoomFactor = 0.01;
-            setScale((prevScale) => {
-                const newScale = prevScale * (1 + delta * zoomFactor);
-                return Math.min(Math.max(newScale, MIN_SCALE), MAX_SCALE);
-            });
-        }
-    };
+        if (scaleValue < 33) {
+            // Hour view
+            // Show hours for current day and adjacent days
+            const hoursToShow = Math.floor(24 * (1 + scaleValue / 33)); // 24 to 48 hours
+            const startHour = addHours(today, -Math.floor(hoursToShow / 2));
 
-    // Touch handlers for pinch-to-zoom gestures
-    const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
-        if (e.touches.length === 2) {
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            pinchRef.current = Math.hypot(dx, dy);
-        }
-    };
-
-    const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
-        if (e.touches.length === 2 && pinchRef.current !== null) {
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            const newDistance = Math.hypot(dx, dy);
-            const distanceDelta = newDistance / pinchRef.current;
-
-            setScale((prevScale) => {
-                const newScale = prevScale * distanceDelta;
-                return Math.min(Math.max(newScale, MIN_SCALE), MAX_SCALE);
-            });
-            pinchRef.current = newDistance;
-        }
-    };
-
-    const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
-        if (e.touches.length < 2) {
-            pinchRef.current = null;
-        }
-    };
-
-    // Recalculate visible date groups whenever startDate, endDate, or scale changes.
-    useEffect(() => {
-        const calculateVisibleGroups = () => {
-            if (!gridRef.current) return;
-
-            const gridWidth = gridRef.current.offsetWidth;
-            // Multiply scale so that higher scale means wider columns.
-            const scaledDateWidth = minDateWidth * scale;
-            const maxVisibleColumns = Math.floor(gridWidth / scaledDateWidth);
-
-            const allDates = eachDayOfInterval({
-                start: startDate,
-                end: endDate,
-            });
-            let groups: DateGroup[] = [];
-
-            if (allDates.length <= maxVisibleColumns) {
-                groups = allDates.map((date) => ({ start: date, end: date }));
-            } else {
-                const groupSize = Math.ceil(
-                    allDates.length / maxVisibleColumns
-                );
-                for (let i = 0; i < allDates.length; i += groupSize) {
-                    const groupSlice = allDates.slice(i, i + groupSize);
-                    groups.push({
-                        start: groupSlice[0],
-                        end: groupSlice[groupSlice.length - 1],
-                    });
-                }
+            for (let i = 0; i < hoursToShow; i++) {
+                const hourDate = addHours(startHour, i);
+                dates.push({
+                    start: hourDate,
+                    end: addHours(hourDate, 1),
+                });
             }
+        } else if (scaleValue < 66) {
+            // Day view
+            // Show individual days
+            const daysToShow = Math.floor(7 * ((scaleValue - 33) / 33)); // 7 to 14 days
+            const startDay = addDays(today, -Math.floor(daysToShow / 2));
+
+            for (let i = 0; i < daysToShow; i++) {
+                const dayDate = addDays(startDay, i);
+                dates.push({
+                    start: dayDate,
+                    end: dayDate,
+                });
+            }
+        } else {
+            // Month view
+            // Show days grouped by weeks
+            const totalDays = Math.floor(30 * (scaleValue / 100)); // up to 30 days
+            const startDay = addDays(today, -Math.floor(totalDays / 2));
+            const daysPerGroup = Math.max(1, Math.floor(totalDays / 10)); // Group days as scale increases
+
+            for (let i = 0; i < totalDays; i += daysPerGroup) {
+                const groupStart = addDays(startDay, i);
+                const groupEnd = addDays(groupStart, daysPerGroup - 1);
+                dates.push({
+                    start: groupStart,
+                    end: groupEnd,
+                });
+            }
+        }
+
+        return dates;
+    };
+
+    useEffect(() => {
+        const updateVisibleGroups = () => {
+            if (!gridRef.current) return;
+            const gridWidth = gridRef.current.offsetWidth;
+            const groups = calculateVisibleDates(gridWidth, scale);
             setVisibleGroups(groups);
         };
 
-        calculateVisibleGroups();
+        updateVisibleGroups();
 
-        const resizeObserver = new ResizeObserver(calculateVisibleGroups);
+        const resizeObserver = new ResizeObserver(updateVisibleGroups);
         if (gridRef.current) {
             resizeObserver.observe(gridRef.current);
         }
         return () => resizeObserver.disconnect();
-    }, [startDate, endDate, scale]);
+    }, [scale]);
 
-    // Generate time slots based on gridGrain.
     const generateTimeSlots = () => {
+        if (visibleGroups.length === 0) return [];
+
         const slots = [];
-        let current = startOfDay(startDate);
-        const end = endOfDay(endDate);
+        let current = startOfDay(visibleGroups[0].start);
+        const end = endOfDay(visibleGroups[visibleGroups.length - 1].end);
+
         const increment = {
             hour: 1,
             halfDay: 12,
@@ -143,60 +119,89 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         return slots;
     };
 
+    const formatDateLabel = (group: DateGroup) => {
+        if (scale < 33) {
+            // Hour view: show hour
+            return format(group.start, "HH:mm");
+        } else if (scale < 66) {
+            // Day view: show date with day
+            return (
+                <span className="inline-flex items-center gap-1">
+                    {format(group.start, "d")}
+                    <span className="text-gray-500 text-xs">
+                        {format(group.start, "EEEEE")}
+                    </span>
+                </span>
+            );
+        } else {
+            // Month view: show date range if grouped
+            return group.start.getTime() === group.end.getTime()
+                ? format(group.start, "d")
+                : `${format(group.start, "d")}-${format(group.end, "d")}`;
+        }
+    };
+
     const timeSlots = generateTimeSlots();
 
     return (
-        <div
-            ref={gridRef}
-            className="relative w-full h-full bg-white"
-            onWheel={handleWheel}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            style={{ touchAction: "none" }}
-        >
-            {/* Header with date labels or grouped ranges */}
-            <div className="flex border-b border-gray-200 transition-all duration-200">
-                {visibleGroups.map((group, index) => (
-                    <div
-                        key={index}
-                        className="flex-1 px-2 py-1 text-center transition-all duration-200"
-                        style={{ minWidth: `${minDateWidth * scale}px` }}
-                    >
-                        <div className="text-sm font-medium">
-                            {group.start.getTime() === group.end.getTime()
-                                ? format(group.start, "d EEEEE")
-                                : `${format(group.start, "d")}-${format(
-                                      group.end,
-                                      "d"
-                                  )} ${format(group.start, "MMMM")}`}
-                        </div>
-                    </div>
-                ))}
+        <div className="flex flex-col h-full">
+            {/* Scale Slider */}
+            <div className="px-4 py-2 border-b border-gray-200">
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={scale}
+                    onChange={(e) => setScale(Number(e.target.value))}
+                    className="w-full"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Hours</span>
+                    <span>Days</span>
+                    <span>Month</span>
+                </div>
             </div>
 
-            {/* Grid container */}
-            <div className="flex h-[calc(100%-32px)] relative">
-                {/* Vertical grid lines */}
-                <div className="flex flex-1 transition-all duration-200">
-                    {timeSlots.map((slot) => (
+            {/* Timeline Grid */}
+            <div ref={gridRef} className="relative flex-1 bg-white">
+                {/* Header with date labels */}
+                <div className="flex border-b border-gray-200 transition-all duration-200">
+                    {visibleGroups.map((group, index) => (
                         <div
-                            key={slot.getTime()}
-                            className="flex-1 border-l border-gray-100 first:border-l-0 transition-all duration-200"
-                            style={{ minWidth: `${minDateWidth * scale}px` }}
-                        />
+                            key={index}
+                            className="flex-1 px-2 py-1 text-center transition-all duration-200"
+                            style={{ minWidth: `${baseColumnWidth}px` }}
+                        >
+                            <div className="text-sm font-medium">
+                                {formatDateLabel(group)}
+                            </div>
+                        </div>
                     ))}
                 </div>
 
-                {/* Horizontal grid lines */}
-                <div className="absolute inset-x-0 top-8 bottom-0">
-                    {[...Array(24)].map((_, index) => (
-                        <div
-                            key={index}
-                            className="border-b border-gray-50"
-                            style={{ height: `${100 / 24}%` }}
-                        />
-                    ))}
+                {/* Grid container */}
+                <div className="flex h-[calc(100%-32px)] relative">
+                    {/* Vertical grid lines */}
+                    <div className="flex flex-1 transition-all duration-200">
+                        {timeSlots.map((slot) => (
+                            <div
+                                key={slot.getTime()}
+                                className="flex-1 border-l border-gray-100 first:border-l-0 transition-all duration-200"
+                                style={{ minWidth: `${baseColumnWidth}px` }}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Horizontal grid lines */}
+                    <div className="absolute inset-x-0 top-8 bottom-0">
+                        {[...Array(24)].map((_, index) => (
+                            <div
+                                key={index}
+                                className="border-b border-gray-50"
+                                style={{ height: `${100 / 24}%` }}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

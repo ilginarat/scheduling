@@ -69,7 +69,7 @@ export default function Home() {
                 <main className="flex-1 bg-gray-100">
                     <div className="flex h-full relative">
                         {/* Main Content Area */}
-                        <div className="flex-1 p-6">
+                        <div className="flex-1 p-6 flex flex-col">
                             <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
                                 <Link href="/" className="hover:text-gray-700">
                                     Home
@@ -104,12 +104,16 @@ export default function Home() {
                             </div>
 
                             {/* Timeline Container */}
-                            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                                <TimelineGrid
-                                    startDate={timelineStartDate}
-                                    endDate={timelineEndDate}
-                                    gridGrain={gridGrain}
-                                />
+                            <div
+                                className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+                                style={{
+                                    width: isOrdersOpen
+                                        ? "calc(100% - 500px)"
+                                        : "100%",
+                                    transition: "width 300ms ease-in-out",
+                                }}
+                            >
+                                <TimelineGrid gridGrain="hour" />
                             </div>
                         </div>
 
