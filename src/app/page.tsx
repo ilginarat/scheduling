@@ -98,22 +98,32 @@ export default function Home() {
                                         <span className="text-sm">Active</span>
                                     </span>
                                 </div>
-                                <div className="text-sm text-gray-500 mt-1">
-                                    CW 23
-                                </div>
                             </div>
 
                             {/* Timeline Container */}
                             <div
-                                className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+                                className="h-[500px] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
                                 style={{
                                     width: isOrdersOpen
-                                        ? "calc(100% - 500px)"
+                                        ? "calc(100% - 400px)"
                                         : "100%",
                                     transition: "width 300ms ease-in-out",
                                 }}
                             >
                                 <TimelineGrid gridGrain="hour" />
+                            </div>
+
+                            {/* Container Below Timeline */}
+                            <div
+                                className="mt-6 h-[250px] bg-white rounded-lg shadow-sm border border-gray-200"
+                                style={{
+                                    width: isOrdersOpen
+                                        ? "calc(100% - 400px)"
+                                        : "100%",
+                                    transition: "width 300ms ease-in-out",
+                                }}
+                            >
+                                {/* Content for the new container will go here */}
                             </div>
                         </div>
 
@@ -121,7 +131,7 @@ export default function Home() {
                         {!isOrdersOpen && (
                             <button
                                 onClick={() => setIsOrdersOpen(true)}
-                                className="fixed right-6 top-24 p-2 bg-white hover:bg-gray-100 rounded-lg transition-colors shadow-md z-50"
+                                className="fixed right-6 top-20 p-2 bg-white hover:bg-gray-100 rounded-lg transition-colors shadow-md z-50"
                                 aria-label="Open orders panel"
                             >
                                 <Menu className="h-6 w-6 text-gray-600" />
@@ -130,7 +140,7 @@ export default function Home() {
 
                         {/* Right Side - Order Cards */}
                         <div
-                            className={`fixed right-0 top-16 bottom-0 w-[500px] bg-white shadow-xl py-8 px-6 overflow-y-auto transition-transform duration-300 ease-in-out z-40 ${
+                            className={`fixed right-0 top-12 bottom-0 w-[400px] bg-white shadow-xl py-6 px-4 overflow-y-auto transition-transform duration-300 ease-in-out z-40 ${
                                 isOrdersOpen
                                     ? "translate-x-0"
                                     : "translate-x-full"

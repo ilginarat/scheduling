@@ -142,7 +142,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
             onClick={onSelect}
         >
             {/* Progress Bar */}
-            <div className="h-1.5 w-full bg-blue-800 flex">
+            <div className="h-1 w-full bg-blue-800 flex">
                 <div
                     className="h-full bg-green-600"
                     style={{ width: `${progressPercentage}%` }}
@@ -151,7 +151,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
 
             {/* Header Section */}
             <div
-                className={`p-4 ${
+                className={`p-3 ${
                     isSelected
                         ? status === "Released"
                             ? "bg-blue-50"
@@ -161,7 +161,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
             >
                 <div className="flex justify-between items-start">
                     <h2
-                        className={`text-xl font-bold ${
+                        className={`text-lg font-bold ${
                             isSelected
                                 ? status === "Released"
                                     ? "text-blue-800"
@@ -172,7 +172,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                         {name}
                     </h2>
                     <div
-                        className={`px-4 py-1 rounded text-xs font-semibold ${
+                        className={`px-3 py-0.5 rounded text-xs font-semibold ${
                             status === "Released"
                                 ? "bg-blue-600 text-white"
                                 : "bg-green-600 text-white"
@@ -181,7 +181,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
                         {status}
                     </div>
                 </div>
-                <div className="flex items-center mt-1 text-sm">
+                <div className="flex items-center mt-0.5 text-xs">
                     <div className="text-gray-500">
                         <span className="text-green-600 font-semibold">
                             {confirmedQuantity}
@@ -190,12 +190,12 @@ const OrderCard: React.FC<OrderCardProps> = ({
                         <span>{targetQuantity}</span>
                         <span> Pcs</span>
                     </div>
-                    <div className="text-gray-500 ml-8">{materialNumber}</div>
+                    <div className="text-gray-500 ml-6">{materialNumber}</div>
                 </div>
             </div>
 
             {/* Time Section */}
-            <div className="p-4 border-t border-b border-gray-200">
+            <div className="p-3 border-t border-b border-gray-200">
                 <div className="flex justify-between items-center">
                     <div className="flex items-center gap-4 flex-1">
                         {(() => {
@@ -220,17 +220,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
                                     <div className="flex items-center gap-4">
                                         <div>
                                             <div className="flex flex-col">
-                                                <div className="flex items-center gap-2 min-w-[90px]">
+                                                <div className="flex items-center gap-2 min-w-[80px]">
                                                     {startResult.shouldStrikethrough &&
                                                         startResult.strikethroughTime && (
-                                                            <div className="text-lg line-through text-gray-400">
+                                                            <div className="text-base line-through text-gray-400">
                                                                 {
                                                                     startResult.strikethroughTime
                                                                 }
                                                             </div>
                                                         )}
                                                     <div
-                                                        className={`text-lg ${
+                                                        className={`text-base ${
                                                             startResult.shouldStrikethrough
                                                                 ? "text-green-600"
                                                                 : ""
@@ -252,17 +252,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
                                         <div className="text-gray-400">→</div>
                                         <div>
                                             <div className="flex flex-col">
-                                                <div className="flex items-center gap-2 min-w-[90px]">
+                                                <div className="flex items-center gap-2 min-w-[80px]">
                                                     {endResult.shouldStrikethrough &&
                                                         endResult.strikethroughTime && (
-                                                            <div className="text-lg line-through text-gray-400">
+                                                            <div className="text-base line-through text-gray-400">
                                                                 {
                                                                     endResult.strikethroughTime
                                                                 }
                                                             </div>
                                                         )}
                                                     <div
-                                                        className={`text-lg ${
+                                                        className={`text-base ${
                                                             endResult.shouldStrikethrough
                                                                 ? "text-green-600"
                                                                 : ""
@@ -301,42 +301,42 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </div>
 
             {/* Status Section */}
-            <div className="p-4 flex gap-6 items-center bg-gray-50">
-                <div className="flex items-center gap-2 mr-24">
+            <div className="p-3 flex gap-4 items-center bg-gray-50">
+                <div className="flex items-center gap-2 mr-16">
                     <div
-                        className={`w-5 h-5 rounded flex items-center justify-center ${
+                        className={`w-4 h-4 rounded flex items-center justify-center ${
                             ifPRT ? "bg-blue-800" : "bg-gray-200"
                         }`}
                     >
-                        <span className="text-white text-sm">✓</span>
+                        <span className="text-white text-xs">✓</span>
                     </div>
-                    <span className="text-base text-gray-500">PRT</span>
+                    <span className="text-sm text-gray-500">PRT</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
                             componentCheck ? "bg-green-600" : "bg-red-700"
                         }`}
                     >
-                        <span className="text-white text-sm">
+                        <span className="text-white text-xs">
                             {componentCheck ? "✓" : "×"}
                         </span>
                     </div>
-                    <span className="text-base font-semibold text-blue-800">
+                    <span className="text-sm font-semibold text-blue-800">
                         Components
                     </span>
                 </div>
                 <div className="flex items-center gap-2">
                     <div
-                        className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                        className={`w-4 h-4 rounded-full flex items-center justify-center ${
                             demandCheck ? "bg-green-600" : "bg-red-700"
                         }`}
                     >
-                        <span className="text-white text-sm">
+                        <span className="text-white text-xs">
                             {demandCheck ? "✓" : "×"}
                         </span>
                     </div>
-                    <span className="text-base font-semibold text-blue-800">
+                    <span className="text-sm font-semibold text-blue-800">
                         Demand
                     </span>
                 </div>

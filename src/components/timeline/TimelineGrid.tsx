@@ -230,7 +230,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
                     </div>
 
                     {/* Grid container */}
-                    <div className="flex h-[calc(100%-32px)] relative">
+                    <div className="flex h-[400px] relative">
                         {/* Vertical grid lines */}
                         <div className="flex w-full transition-all duration-200">
                             {visibleGroups.map((_, index) => (
@@ -245,7 +245,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
                         </div>
 
                         {/* Horizontal grid lines */}
-                        <div className="absolute inset-x-0 top-8 bottom-0">
+                        <div className="absolute inset-x-0 top-0 bottom-0">
                             {[...Array(24)].map((_, index) => (
                                 <div
                                     key={index}
