@@ -46,19 +46,29 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
 
     // Calculate position and width based on scale
     const calculatePosition = () => {
-        // Calculate duration in hours
-        const duration = differenceInHours(endDate, startDate);
+        const totalTimelineHours = differenceInHours(
+            timelineEndDate,
+            timelineStartDate
+        );
+        const duration = differenceInHours(
+            effectiveEndDate,
+            effectiveStartDate
+        );
 
-        // Calculate grid cell width
-        const gridCellWidth =
-            totalWidth / (scale < 33 ? 24 : scale < 66 ? 14 : 30);
-
-        // Calculate width based on duration relative to a single hour/day
-        const hoursPerCell = scale < 33 ? 1 : scale < 66 ? 24 : 24;
-        const cellsSpanned = duration / hoursPerCell;
-
-        // Width is the number of cells spanned multiplied by cell width
-        const width = cellsSpanned * gridCellWidth;
+        // Calculate width as percentage of total width
+        // Calculate width based on grid cell width and hours per grid cell
+        let width;
+        const hoursPerGridCell = scale < 33 
+            ? (scale < 15 ? 1 : scale < 25 ? 2 : 4) // Hour view: 1-4 hours per cell depending on scale
+            : scale < 66 
+                ? 24 // Day view: 24 hours per cell
+                : 24 * 7; // Week view: 168 hours per cell
+                
+        // Calculate grid cell width (totalWidth / number of cells)
+        const gridCellWidth = totalWidth / (totalTimelineHours / hoursPerGridCell);
+        
+        // Calculate width as (grid cell width / hours per grid cell) * duration
+        width = (gridCellWidth / hoursPerGridCell) * duration;
 
         return { width };
     };
