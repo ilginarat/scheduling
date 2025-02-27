@@ -53,6 +53,7 @@ export default function Home() {
     const [gridGrain, setGridGrain] = useState<"hour" | "halfDay" | "day">(
         "hour"
     );
+    const [scale, setScale] = useState(50);
 
     useEffect(() => {
         loadDummyOrders(3);
@@ -62,8 +63,29 @@ export default function Home() {
     const timelineStartDate = startOfDay(new Date());
     const timelineEndDate = addDays(timelineStartDate, 5);
 
-    // Remove the hourColumnWidth and calculateLeftPosition since we're using fixed widths
-    const CARD_SPACING = 16; // Space between cards
+    // Calculate visible time range based on scale
+    const getVisibleTimeRange = () => {
+        if (scale < 33) {
+            // Hour view: 24 to 48 hours
+            const totalHours = Math.floor(24 * (1 + scale / 33));
+            return addDays(timelineStartDate, Math.ceil(totalHours / 24));
+        } else if (scale < 66) {
+            // Day view: 3 to 14 days
+            const minDays = 3;
+            const maxDays = 14;
+            const normalizedScale = (scale - 33) / 33;
+            const days = Math.floor(
+                minDays + (maxDays - minDays) * normalizedScale
+            );
+            return addDays(timelineStartDate, days);
+        } else {
+            // Month view: up to 30 days
+            const days = Math.floor(30 * (scale / 100));
+            return addDays(timelineStartDate, days);
+        }
+    };
+
+    const visibleEndDate = getVisibleTimeRange();
 
     // Sort orders by start date
     const sortedOrders = [...orders].sort(
@@ -121,7 +143,10 @@ export default function Home() {
                                     transition: "width 300ms ease-in-out",
                                 }}
                             >
-                                <TimelineGrid gridGrain="hour" />
+                                <TimelineGrid
+                                    gridGrain="hour"
+                                    onScaleChange={setScale}
+                                />
                             </div>
 
                             {/* Container Below Timeline */}
@@ -164,11 +189,10 @@ export default function Home() {
                                                 timelineStartDate={
                                                     timelineStartDate
                                                 }
-                                                timelineEndDate={
-                                                    timelineEndDate
-                                                }
+                                                timelineEndDate={visibleEndDate}
                                                 totalWidth={1299 - 64}
                                                 verticalIndex={index}
+                                                scale={scale}
                                                 onSelect={() => {
                                                     if (
                                                         selectedOrder?.order_number ===

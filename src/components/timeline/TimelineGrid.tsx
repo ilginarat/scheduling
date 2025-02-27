@@ -11,6 +11,7 @@ import {
 
 interface TimelineGridProps {
     gridGrain: "hour" | "halfDay" | "day";
+    onScaleChange?: (scale: number) => void;
 }
 
 // A group can represent one date or a range of dates
@@ -19,7 +20,10 @@ interface DateGroup {
     end: Date;
 }
 
-const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
+const TimelineGrid: React.FC<TimelineGridProps> = ({
+    gridGrain,
+    onScaleChange,
+}) => {
     const gridRef = useRef<HTMLDivElement>(null);
     const [visibleGroups, setVisibleGroups] = useState<DateGroup[]>([]);
     const [scale, setScale] = useState(50); // Scale from 0 to 100
@@ -183,7 +187,11 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
                     min="0"
                     max="100"
                     value={scale}
-                    onChange={(e) => setScale(Number(e.target.value))}
+                    onChange={(e) => {
+                        const newScale = Number(e.target.value);
+                        setScale(newScale);
+                        onScaleChange?.(newScale);
+                    }}
                     className="w-full"
                 />
                 <div className="flex justify-between text-xs text-gray-500 mt-1">

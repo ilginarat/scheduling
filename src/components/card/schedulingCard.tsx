@@ -19,6 +19,7 @@ interface SchedulingCardProps {
     timelineEndDate: Date;
     totalWidth: number;
     verticalIndex: number;
+    scale: number;
 }
 
 const SchedulingCard: React.FC<SchedulingCardProps> = ({
@@ -33,6 +34,7 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
     timelineEndDate,
     totalWidth,
     verticalIndex,
+    scale,
 }) => {
     // Calculate the effective start and end dates within the visible timeline
     const effectiveStartDate = isBefore(startDate, timelineStartDate)
@@ -42,18 +44,26 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
         ? timelineEndDate
         : endDate;
 
-    // Calculate duration in hours for width
-    const durationHours = differenceInHours(
-        effectiveEndDate,
-        effectiveStartDate
-    );
-    const totalTimelineHours = differenceInHours(
-        timelineEndDate,
-        timelineStartDate
-    );
+    // Calculate position and width based on scale
+    const calculatePosition = () => {
+        // Calculate duration in hours
+        const duration = differenceInHours(endDate, startDate);
 
-    // Calculate width as percentage of total width
-    const width = (durationHours / totalTimelineHours) * totalWidth;
+        // Calculate grid cell width
+        const gridCellWidth =
+            totalWidth / (scale < 33 ? 24 : scale < 66 ? 14 : 30);
+
+        // Calculate width based on duration relative to a single hour/day
+        const hoursPerCell = scale < 33 ? 1 : scale < 66 ? 24 : 24;
+        const cellsSpanned = duration / hoursPerCell;
+
+        // Width is the number of cells spanned multiplied by cell width
+        const width = cellsSpanned * gridCellWidth;
+
+        return { width };
+    };
+
+    const { width } = calculatePosition();
 
     // Calculate top position based on verticalIndex (each card is 82px tall + 16px gap)
     const topPosition = verticalIndex * (82 + 16);
