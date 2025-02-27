@@ -25,6 +25,44 @@ export function generateDummyWorkCenterOrder(
     const plannedStart = generateRandomDate(now, futureDate);
     const plannedEnd = generateRandomDate(new Date(plannedStart), futureDate);
 
+    // 40% chance of having updated times different from planned
+    const hasUpdatedTimes = Math.random() < 0.4;
+    const updatedStart = hasUpdatedTimes
+        ? new Date(
+              new Date(plannedStart).getTime() +
+                  (Math.random() * 2 - 1) * 60 * 60 * 1000
+          ).toISOString()
+        : plannedStart;
+    const updatedEnd = hasUpdatedTimes
+        ? new Date(
+              new Date(plannedEnd).getTime() +
+                  (Math.random() * 2 - 1) * 60 * 60 * 1000
+          ).toISOString()
+        : plannedEnd;
+
+    // 30% chance of having actual times (meaning production has started)
+    const hasActualStart = Math.random() < 0.3;
+    const hasActualEnd = hasActualStart && Math.random() < 0.5; // 50% chance of having end time if started
+
+    // If actual times exist, generate them with 50% chance of matching updated times
+    const actualStart = hasActualStart
+        ? Math.random() < 0.5
+            ? updatedStart
+            : new Date(
+                  new Date(updatedStart).getTime() +
+                      (Math.random() * 2 - 1) * 60 * 60 * 1000
+              ).toISOString()
+        : "";
+
+    const actualEnd = hasActualEnd
+        ? Math.random() < 0.5
+            ? updatedEnd
+            : new Date(
+                  new Date(updatedEnd).getTime() +
+                      (Math.random() * 2 - 1) * 60 * 60 * 1000
+              ).toISOString()
+        : "";
+
     // Generate target quantity first
     const targetQuantity = Math.floor(Math.random() * 1000) + 1;
     // Generate confirmed quantity as a random portion of target quantity
@@ -56,10 +94,10 @@ export function generateDummyWorkCenterOrder(
         production_resource_tool_check: Math.random() > 0.5,
         planned_start_time: plannedStart,
         planned_end_time: plannedEnd,
-        updated_start_time: plannedStart,
-        updated_end_time: plannedEnd,
-        actual_start_time: "",
-        actual_end_time: "",
+        updated_start_time: updatedStart,
+        updated_end_time: updatedEnd,
+        actual_start_time: actualStart,
+        actual_end_time: actualEnd,
         order_status: getRandomElement(orderStatuses),
         updated_at: new Date().toISOString(),
     };
