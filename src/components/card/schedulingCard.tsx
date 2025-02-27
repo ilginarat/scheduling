@@ -1,5 +1,11 @@
 import React from "react";
-import { differenceInMinutes } from "date-fns";
+import {
+    differenceInHours,
+    isAfter,
+    isBefore,
+    startOfDay,
+    addDays,
+} from "date-fns";
 
 interface SchedulingCardProps {
     name: string;
@@ -9,7 +15,10 @@ interface SchedulingCardProps {
     endDate: Date;
     isSelected?: boolean;
     onSelect?: () => void;
-    style?: React.CSSProperties;
+    timelineStartDate: Date;
+    timelineEndDate: Date;
+    totalWidth: number;
+    verticalIndex: number;
 }
 
 const SchedulingCard: React.FC<SchedulingCardProps> = ({
@@ -20,51 +29,59 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
     endDate,
     isSelected,
     onSelect,
-    style,
+    timelineStartDate,
+    timelineEndDate,
+    totalWidth,
+    verticalIndex,
 }) => {
-    const durationInMinutes = differenceInMinutes(endDate, startDate);
-    const cardWidth = Math.max(durationInMinutes, 200); // Minimum width of 200px
+    // Calculate the effective start and end dates within the visible timeline
+    const effectiveStartDate = isBefore(startDate, timelineStartDate)
+        ? timelineStartDate
+        : startDate;
+    const effectiveEndDate = isAfter(endDate, timelineEndDate)
+        ? timelineEndDate
+        : endDate;
+
+    // Calculate duration in hours for width
+    const durationHours = differenceInHours(
+        effectiveEndDate,
+        effectiveStartDate
+    );
+    const totalTimelineHours = differenceInHours(
+        timelineEndDate,
+        timelineStartDate
+    );
+
+    // Calculate width as percentage of total width
+    const width = (durationHours / totalTimelineHours) * totalWidth;
+
+    // Calculate top position based on verticalIndex (each card is 82px tall + 16px gap)
+    const topPosition = verticalIndex * (82 + 16);
 
     return (
         <div
-            className={`flex flex-col h-[83px] bg-white border  cursor-pointer
+            className={`h-[82px] absolute bg-white border border-gray-200 cursor-pointer overflow-hidden flex flex-col
                 ${
                     isSelected
                         ? "ring-2 ring-blue-600"
                         : "hover:ring-1 hover:ring-gray-300"
                 }`}
-            style={{ width: `${cardWidth}px` }}
+            style={{
+                left: 0,
+                top: `${topPosition}px`,
+                width: `${width}px`,
+            }}
             onClick={onSelect}
         >
-            {/* Progress bar - 9px height with rounded corners */}
-            <div className="h-[9px] w-full  bg-gray-200">
-                {confirmedQuantity > 0 && (
-                    <>
-                        <div
-                            className="h-full  bg-gray-200"
-                            style={{
-                                width: `${
-                                    (confirmedQuantity / targetQuantity) * 100
-                                }%`,
-                            }}
-                        />
-                        {/* <div
-                            className="absolute top-0 right-0 h-full rounded-md bg-blue-500"
-                            style={{
-                                width: `${
-                                    ((targetQuantity - confirmedQuantity) /
-                                        targetQuantity) *
-                                    100
-                                }%`,
-                            }}
-                        /> */}
-                    </>
-                )}
-            </div>
+            {/* Gray line at the top */}
+            <div className="h-[24px] w-full bg-gray-300 border-b border-gray-300" />
 
-            {/* Content container - centers text */}
-            <div className="flex-1 flex items-start justify-start p-4">
-                <span className="text-gray-900 font-medium">{name}</span>
+            {/* Content */}
+            <div className="p-4 flex flex-col gap-1">
+                <div className="font-semibold text-sm truncate">{name}</div>
+                <div className="text-sm text-gray-600">
+                    {targetQuantity} pcs
+                </div>
             </div>
         </div>
     );

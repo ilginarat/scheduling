@@ -135,16 +135,11 @@ export default function Home() {
                                 }}
                             >
                                 {/* Scheduling Cards Container */}
-                                <div className="p-4 flex flex-col gap-4 ">
-                                    {sortedOrders.map((order, index) => (
-                                        <div
-                                            key={order.order_number}
-                                            className=""
-                                            style={{
-                                                left: index * (200 + 16) + "px",
-                                            }}
-                                        >
+                                <div className="relative h-[240px] py-6 w-[1299px]">
+                                    <div className="absolute left-8 right-8">
+                                        {sortedOrders.map((order, index) => (
                                             <SchedulingCard
+                                                key={order.order_number}
                                                 name={order.order_number}
                                                 confirmedQuantity={
                                                     order.confirmed_quantity
@@ -166,6 +161,14 @@ export default function Home() {
                                                     selectedOrder?.order_number ===
                                                     order.order_number
                                                 }
+                                                timelineStartDate={
+                                                    timelineStartDate
+                                                }
+                                                timelineEndDate={
+                                                    timelineEndDate
+                                                }
+                                                totalWidth={1299 - 64}
+                                                verticalIndex={index}
                                                 onSelect={() => {
                                                     if (
                                                         selectedOrder?.order_number ===
@@ -179,8 +182,8 @@ export default function Home() {
                                                     }
                                                 }}
                                             />
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -225,7 +228,7 @@ export default function Home() {
                             ) : error ? (
                                 <div className="text-red-500 p-4">{error}</div>
                             ) : (
-                                <div className="space-y-4">
+                                <div className="space-y-4 pb-24">
                                     {orders.map((order) => (
                                         <OrderCard
                                             key={order.order_number}

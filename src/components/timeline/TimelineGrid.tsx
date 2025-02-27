@@ -134,10 +134,8 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
         groups: DateGroup[]
     ) => {
         if (scale < 33) {
-            // Hour view: show end time only for multi-hour slots
+            // Hour view: show only start time
             const startTime = format(group.start, "H");
-            const endTime = format(group.end, "H");
-            const isMultiHour = startTime !== endTime;
             const isNewDay =
                 index === 0 ||
                 format(group.start, "yyyy-MM-dd") !==
@@ -145,10 +143,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
 
             return (
                 <span className="inline-flex flex-col h-[38px] justify-center">
-                    <span>
-                        {startTime}
-                        {isMultiHour ? ` - ${endTime}` : ""}
-                    </span>
+                    <span>{startTime}</span>
                     <span className="text-xs text-gray-500 h-4">
                         {isNewDay ? format(group.start, "MMM d") : "\u00A0"}
                     </span>
@@ -214,10 +209,16 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({ gridGrain }) => {
                                     style={{
                                         width: `${100 / visibleGroups.length}%`,
                                         minWidth: "fit-content",
-                                        padding: "0.25rem 0.5rem",
+                                        padding: "0.5rem",
                                     }}
                                 >
-                                    <div className="text-sm font-medium whitespace-nowrap">
+                                    <div
+                                        className={`text-sm font-medium whitespace-nowrap ${
+                                            scale < 33
+                                                ? "text-left"
+                                                : "text-center"
+                                        }`}
+                                    >
                                         {formatDateLabel(
                                             group,
                                             index,
