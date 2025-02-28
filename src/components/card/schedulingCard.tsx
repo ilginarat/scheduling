@@ -1,68 +1,36 @@
 import React from "react";
-import {
-    differenceInMilliseconds,
-    isAfter,
-    isBefore,
-    startOfDay,
-    addDays,
-} from "date-fns";
 import { useOrderStore } from "@/stores/orderStore";
-
+import { WorkCenterOrder } from "@/lib/orderData/types";
+import { calculateWidth } from "@/shared/utils";
 interface SchedulingCardProps {
-    name: string;
-    confirmedQuantity: number;
-    targetQuantity: number;
-    startDate: Date;
-    endDate: Date;
-    isSelected?: boolean;
-    onSelect?: () => void;
-    timelineStartDate: Date;
-    timelineEndDate: Date;
-    totalWidth: number;
+    order: WorkCenterOrder;
     verticalIndex: number;
-    scale: number;
-    columnWidth: number;
-    columnCount: number;
+    index: number;
 }
 
 const SchedulingCard: React.FC<SchedulingCardProps> = ({
-    name,
-    confirmedQuantity,
-    targetQuantity,
-    startDate,
-    endDate,
-    isSelected,
-    onSelect,
-    timelineStartDate,
-    timelineEndDate,
-    totalWidth,
+    order,
     verticalIndex,
-    scale,
-    columnWidth,
-    columnCount,
+    index,
 }) => {
-    // Calculate the effective start and end dates within the visible timeline
-    const effectiveStartDate = startDate;
-    const effectiveEndDate = endDate;
+    // Extract data from the WorkCenterOrder
+    console.log("SchedulingCard order", order);
+    console.log("SchedulingCard index", index);
+    const name = order.order_number;
+    const targetQuantity = order.target_quantity;
+    // const confirmedQuantity = order?.confirmed_quantity;
+    const startDate = new Date(order.planned_start_time);
+    const endDate = new Date(order.planned_end_time);
 
-    const { convesionPixels } = useOrderStore();
+    const { conversionPixels, selectedOrder, selectOrder } = useOrderStore();
 
-    const calculateWidth = () => {
-        // Calculate the duration of the order in hours
-        const orderDurationHours =
-            differenceInMilliseconds(effectiveEndDate, effectiveStartDate) /
-            1000 /
-            60 /
-            60;
-
-        // Return the calculated width, ensuring it's at least a minimum size for visibility
-        return orderDurationHours * 60 * 60 * convesionPixels;
-    };
-
-    const width = calculateWidth();
+    const width = calculateWidth(startDate, endDate, conversionPixels);
 
     // Calculate top position based on verticalIndex (each card is 82px tall + 16px gap)
     const topPosition = verticalIndex * (82 + 16);
+
+    const isSelected =
+        selectedOrder && selectedOrder.order_number === order.order_number;
 
     return (
         <div
@@ -77,7 +45,7 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
                 top: `${topPosition}px`,
                 width: `${width}px`,
             }}
-            onClick={onSelect}
+            onClick={() => selectOrder(order.order_number)}
         >
             {/* Gray line at the top */}
             <div className="h-[24px] w-full bg-gray-300 border-b border-gray-300" />
@@ -88,6 +56,7 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
                 <div className="text-sm text-gray-600">
                     {targetQuantity} pcs
                 </div>
+                <div className="text-sm text-gray-600">{index}</div>
             </div>
         </div>
     );

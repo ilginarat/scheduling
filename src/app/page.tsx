@@ -42,26 +42,29 @@ const mapWorkCenterOrderToCardProps = (order: WorkCenterOrder) => {
 export default function Home() {
     const {
         orders,
+        setScheduledOrders,
+        scheduledOrders,
+        unscheduledOrders,
         loadDummyOrders,
         isLoading,
         error,
         selectedOrder,
         selectOrder,
         clearSelectedOrder,
+        scheduleOrder,
+        unscheduleOrder,
+        moveAllToScheduled,
+        moveAllToUnscheduled,
     } = useOrderStore();
     const [isOrdersOpen, setIsOrdersOpen] = useState(true);
-    // const [gridGrain, setGridGrain] = useState<"hour" | "halfDay" | "day">(
-    //     "hour"
-    // );
     const [scale, setScale] = useState(50);
     const [columnWidth, setColumnWidth] = useState(0);
     const [columnCount, setColumnCount] = useState(0);
+    const [showScheduled, setShowScheduled] = useState(true);
 
     useEffect(() => {
         loadDummyOrders(3);
     }, [loadDummyOrders]);
-
-    // console.log("orders:", orders);
 
     // Timeline dates (you might want to make these dynamic based on your needs)
     const timelineStartDate = startOfDay(new Date());
@@ -98,11 +101,57 @@ export default function Home() {
     const visibleEndDate = getVisibleTimeRange();
 
     // Sort orders by start date
-    const sortedOrders = [...orders].sort(
+    const sortedScheduledOrders = [...scheduledOrders].sort(
         (a, b) =>
             new Date(a.planned_start_time).getTime() -
             new Date(b.planned_start_time).getTime()
     );
+
+    // Handle scheduling/unscheduling an order
+    const handleOrderCardClick = (
+        orderNumber: string,
+        isScheduled: boolean
+    ) => {
+        if (selectedOrder?.order_number === orderNumber) {
+            clearSelectedOrder();
+        } else {
+            selectOrder(orderNumber);
+
+            // If the order is already in the desired state, don't change it
+            if (isScheduled) {
+                const isAlreadyScheduled = scheduledOrders.some(
+                    (order) => order.order_number === orderNumber
+                );
+                if (!isAlreadyScheduled) {
+                    scheduleOrder(orderNumber);
+                }
+            } else {
+                const isAlreadyUnscheduled = unscheduledOrders.some(
+                    (order) => order.order_number === orderNumber
+                );
+                if (!isAlreadyUnscheduled) {
+                    unscheduleOrder(orderNumber);
+                }
+            }
+        }
+    };
+
+    // DEBUG
+
+    useEffect(() => {
+        console.log("scheduledOrders:", scheduledOrders);
+        console.log("unscheduledOrders:", unscheduledOrders);
+
+        setScheduledOrders(unscheduledOrders);
+    }, [unscheduledOrders]);
+
+    const handleSchedule = () => {
+        // only if an order is selected s
+        console.log("clicked");
+        // get the selected order
+
+        // move selected order to scheduledOrders
+    };
 
     return (
         <div className="flex flex-col h-screen">
@@ -137,15 +186,14 @@ export default function Home() {
                                 </h1>
                                 <div className="flex items-center gap-2">
                                     <span className="inline-flex items-center gap-1">
-                                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                        <span className="w-2 h-2m bg-green-600 rounded-full"></span>
                                         <span className="text-sm">Active</span>
                                     </span>
                                 </div>
                             </div>
 
-                            {/* Timeline Container */}
                             <div
-                                className="h-[500px] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden"
+                                className="flex flex-col"
                                 style={{
                                     width: isOrdersOpen
                                         ? "calc(100% - 400px)"
@@ -153,13 +201,28 @@ export default function Home() {
                                     transition: "width 300ms ease-in-out",
                                 }}
                             >
-                                <TimelineGrid
-                                    gridGrain="hour"
-                                    onScaleChange={setScale}
-                                    onColumnWidthChange={
-                                        handleColumnWidthChange
-                                    }
-                                />
+                                <div className="h-[60px] flex flex-row justify-end items-center overflow pr-10 ">
+                                    <div
+                                        className="h-[10px] w-[100px] bg-blue-600 p-5 flex flex-row justify-center items-center text-white rounded-xl shadow-lg hover:bg-green-500"
+                                        onClick={() => {
+                                            console.log("clicked");
+                                        }}
+                                    >
+                                        Schedule
+                                    </div>
+                                </div>
+
+                                {/* Timeline Container */}
+                                <div className="h-[500px] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                                    {" "}
+                                    <TimelineGrid
+                                        gridGrain="hour"
+                                        onScaleChange={setScale}
+                                        onColumnWidthChange={
+                                            handleColumnWidthChange
+                                        }
+                                    />
+                                </div>
                             </div>
 
                             {/* Container Below Timeline */}
@@ -173,55 +236,18 @@ export default function Home() {
                                 }}
                             >
                                 {/* Scheduling Cards Container */}
-                                <div className="relative h-[240px] py-6 w-[1299px]">
+                                <div className="relative h-[400px] py-6 w-[1299px]">
                                     <div className="absolute left-8 right-8">
-                                        {sortedOrders.map((order, index) => (
-                                            <SchedulingCard
-                                                key={order.order_number}
-                                                name={order.order_number}
-                                                confirmedQuantity={
-                                                    order.confirmed_quantity
-                                                }
-                                                targetQuantity={
-                                                    order.target_quantity
-                                                }
-                                                startDate={
-                                                    new Date(
-                                                        order.planned_start_time
-                                                    )
-                                                }
-                                                endDate={
-                                                    new Date(
-                                                        order.planned_end_time
-                                                    )
-                                                }
-                                                isSelected={
-                                                    selectedOrder?.order_number ===
-                                                    order.order_number
-                                                }
-                                                timelineStartDate={
-                                                    timelineStartDate
-                                                }
-                                                timelineEndDate={visibleEndDate}
-                                                totalWidth={1299 - 64}
-                                                verticalIndex={index}
-                                                scale={scale}
-                                                columnWidth={columnWidth}
-                                                columnCount={columnCount}
-                                                onSelect={() => {
-                                                    if (
-                                                        selectedOrder?.order_number ===
-                                                        order.order_number
-                                                    ) {
-                                                        clearSelectedOrder();
-                                                    } else {
-                                                        selectOrder(
-                                                            order.order_number
-                                                        );
-                                                    }
-                                                }}
-                                            />
-                                        ))}
+                                        {unscheduledOrders.map(
+                                            (order, index) => (
+                                                <SchedulingCard
+                                                    key={order.order_number}
+                                                    order={order}
+                                                    index={index}
+                                                    verticalIndex={index}
+                                                />
+                                            )
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -248,16 +274,64 @@ export default function Home() {
                         >
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="text-gray-500 font-semibold">
-                                    MY SCHEDULED ORDERS
+                                    MY ORDERS
                                 </h2>
-                                <button
-                                    onClick={() => setIsOrdersOpen(false)}
-                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                    aria-label="Close orders panel"
-                                >
-                                    <Menu className="h-6 w-6 text-gray-600" />
-                                </button>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex rounded-md overflow-hidden border border-gray-200">
+                                        <button
+                                            onClick={() =>
+                                                setShowScheduled(true)
+                                            }
+                                            className={`px-3 py-1 text-xs ${
+                                                showScheduled
+                                                    ? "bg-blue-500 text-white"
+                                                    : "bg-gray-100 text-gray-600"
+                                            }`}
+                                        >
+                                            Scheduled
+                                        </button>
+                                        <button
+                                            onClick={() =>
+                                                setShowScheduled(false)
+                                            }
+                                            className={`px-3 py-1 text-xs ${
+                                                !showScheduled
+                                                    ? "bg-blue-500 text-white"
+                                                    : "bg-gray-100 text-gray-600"
+                                            }`}
+                                        >
+                                            Unscheduled
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsOrdersOpen(false)}
+                                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                        aria-label="Close orders panel"
+                                    >
+                                        <Menu className="h-6 w-6 text-gray-600" />
+                                    </button>
+                                </div>
                             </div>
+
+                            {/* Action buttons */}
+                            <div className="flex justify-between mb-4">
+                                {showScheduled ? (
+                                    <button
+                                        onClick={moveAllToUnscheduled}
+                                        className="text-xs px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"
+                                    >
+                                        Unschedule All
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={moveAllToScheduled}
+                                        className="text-xs px-3 py-1 bg-blue-500 hover:bg-blue-600 rounded text-white"
+                                    >
+                                        Schedule All
+                                    </button>
+                                )}
+                            </div>
+
                             {isLoading ? (
                                 <div className="flex items-center justify-center h-full">
                                     <div className="text-gray-500">
@@ -268,7 +342,10 @@ export default function Home() {
                                 <div className="text-red-500 p-4">{error}</div>
                             ) : (
                                 <div className="space-y-4 pb-24">
-                                    {orders.map((order) => (
+                                    {(showScheduled
+                                        ? scheduledOrders
+                                        : unscheduledOrders
+                                    ).map((order) => (
                                         <OrderCard
                                             key={order.order_number}
                                             {...mapWorkCenterOrderToCardProps(
@@ -279,23 +356,31 @@ export default function Home() {
                                                 order.order_number
                                             }
                                             onSelect={() => {
-                                                if (
-                                                    selectedOrder?.order_number ===
-                                                    order.order_number
-                                                ) {
-                                                    clearSelectedOrder();
-                                                } else {
-                                                    selectOrder(
-                                                        order.order_number
-                                                    );
-                                                }
+                                                handleOrderCardClick(
+                                                    order.order_number,
+                                                    showScheduled
+                                                );
                                             }}
                                         />
                                     ))}
+
+                                    {(showScheduled
+                                        ? scheduledOrders
+                                        : unscheduledOrders
+                                    ).length === 0 && (
+                                        <div className="text-center py-8 text-gray-500">
+                                            No{" "}
+                                            {showScheduled
+                                                ? "scheduled"
+                                                : "unscheduled"}{" "}
+                                            orders
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
                     </div>
+                    <div className="h-[100px] bg-red-500"></div>
                 </main>
             </div>
         </div>

@@ -1,32 +1,21 @@
-/**
- * TimelineGrid Component
- *
- * This component renders a scalable timeline grid that can display time in different granularities:
- * - Hour view: Shows hours with date indicators for new days
- * - Day view: Shows days with weekday indicators
- * - Month view: Shows days grouped into weeks/months
- *
- * The component includes a scale slider that allows users to zoom in/out, changing the visible
- * time range and granularity dynamically.
- */
 import React, { useEffect, useRef, useState } from "react";
+import OrderCard from "@/components/card/orderCard";
+import { WorkCenterOrder } from "@/lib/orderData/types";
+
 import {
     format,
     addHours,
     startOfDay,
     endOfDay,
     addDays,
-    eachDayOfInterval,
-    addMonths,
+    differenceInMilliseconds,
     differenceInSeconds,
 } from "date-fns";
+
 import { useOrderStore } from "@/stores/orderStore";
-/**
- * Props for the TimelineGrid component
- * @property {string} gridGrain - The base granularity of the grid ("hour", "halfDay", or "day")
- * @property {function} onScaleChange - Optional callback that fires when the scale changes
- * @property {function} onColumnWidthChange - Optional callback that fires when column width changes
- */
+import { mapWorkCenterOrderToCardProps } from "@/components/card/cards";
+import SchedulingCard from "../card/schedulingCard";
+
 interface TimelineGridProps {
     gridGrain: "hour" | "halfDay" | "day";
     onScaleChange?: (scale: number) => void;
@@ -45,7 +34,15 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
 }) => {
     // Reference to the grid container for measuring available width
     const gridRef = useRef<HTMLDivElement>(null);
-    const { setConversionPixels } = useOrderStore();
+    const {
+        selectOrder,
+        setConversionPixels,
+        selectedOrder,
+        setTimelineStartDate,
+        scheduledOrders,
+        unscheduledOrders,
+        conversionPixels,
+    } = useOrderStore();
 
     // State for visible date groups and scale value
     const [visibleGroups, setVisibleGroups] = useState<DateGroup[]>([]);
@@ -53,18 +50,14 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
     const [columnWidth, setColumnWidth] = useState(0); // Width of each column in pixels
     const totalGridWidth = 1299; // Total width of the grid in pixels
 
-    /**
-     * Converts seconds to pixels based on the current scale value
-     * This is useful for positioning elements on the timeline
-     *
-     * @param {number} seconds - The number of seconds to convert
-     * @returns {number} - The equivalent width in pixels
-     */
     const secondsToPixels = (): number => {
         if (visibleGroups.length === 0) return 0;
 
         // Calculate the total time span of the visible timeline in seconds
         const timelineStart = visibleGroups[0].start;
+
+        // setTimelineStartDate(timelineStart);
+
         const timelineEnd = visibleGroups[visibleGroups.length - 1].end;
         const totalTimeSpanSeconds = differenceInSeconds(
             timelineEnd,
@@ -81,17 +74,18 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         return pixelsPerSecond;
     };
 
-    /**
-     * Calculates the visible date groups based on the current scale value
-     * The scale determines both the time range and the granularity:
-     * - 0-33: Hour view (24-48 hours)
-     * - 34-66: Day view (3-14 days)
-     * - 67-100: Month view (up to 30 days)
-     *
-     * @param {number} availableWidth - The available width for the grid
-     * @param {number} scaleValue - The current scale value (0-100)
-     * @returns {DateGroup[]} - Array of date groups to display
-     */
+    const calculateLeftOffset = (
+        order: WorkCenterOrder,
+        conversionPixels: number
+    ): number => {
+        console.log("calculateLeftOffset order", order);
+        const orderStart = new Date(order.planned_start_time).getTime();
+        const timelineStart = new Date(visibleGroups[0]?.start).getTime();
+        const diff = differenceInMilliseconds(orderStart, timelineStart);
+
+        return diff * conversionPixels;
+    };
+
     const calculateVisibleDates = (
         availableWidth: number,
         scaleValue: number
@@ -171,8 +165,6 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         setConversionPixels(secondsToPixels());
     }, [scale]);
 
-
-    
     useEffect(() => {
         const updateVisibleGroups = () => {
             if (!gridRef.current) return;
@@ -257,6 +249,12 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
 
     const timeSlots = generateTimeSlots();
 
+    useEffect(() => {
+        console.log("scheduledOrders TO SEE ", scheduledOrders);
+    }, [scheduledOrders]);
+
+    console.log(" scheduledOrders in the timeline", scheduledOrders);
+
     return (
         <div className="flex flex-col h-full">
             {/* Scale Slider - Controls the zoom level of the timeline */}
@@ -315,6 +313,26 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                                 </div>
                             ))}
                         </div>
+                        {scheduledOrders.length > 0 &&
+                            scheduledOrders.map((local_order, index) => (
+                                <div
+                                    key={local_order.order_number}
+                                    className="absolute opacity-90"
+                                    style={{
+                                        top: `${index * 100}px`,
+                                        left: `${calculateLeftOffset(
+                                            local_order,
+                                            conversionPixels
+                                        )}px`,
+                                    }}
+                                >
+                                    <SchedulingCard
+                                        order={local_order}
+                                        verticalIndex={index}
+                                        index={index}
+                                    />
+                                </div>
+                            ))}
                     </div>
 
                     {/* Grid container - Contains vertical and horizontal grid lines */}

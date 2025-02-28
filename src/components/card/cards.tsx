@@ -8,7 +8,7 @@ interface OrderCardsProps {
     clearSelectedOrder: () => void;
 }
 
-const mapWorkCenterOrderToCardProps = (order: WorkCenterOrder) => {
+export const mapWorkCenterOrderToCardProps = (order: WorkCenterOrder) => {
     return {
         name: order.order_number,
         orderStatus: order.order_status,

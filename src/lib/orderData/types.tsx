@@ -1,4 +1,4 @@
-export type WorkCenterOrder = {
+export interface WorkCenterOrder {
     order_number: string;
     material_number: string;
     work_center_number: string;
@@ -20,4 +20,4 @@ export type WorkCenterOrder = {
     actual_end_time: string;
     order_status: string;
     updated_at: string;
-};
+}
