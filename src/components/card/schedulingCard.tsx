@@ -1,11 +1,12 @@
 import React from "react";
 import {
-    differenceInHours,
+    differenceInMilliseconds,
     isAfter,
     isBefore,
     startOfDay,
     addDays,
 } from "date-fns";
+import { useOrderStore } from "@/stores/orderStore";
 
 interface SchedulingCardProps {
     name: string;
@@ -20,6 +21,8 @@ interface SchedulingCardProps {
     totalWidth: number;
     verticalIndex: number;
     scale: number;
+    columnWidth: number;
+    columnCount: number;
 }
 
 const SchedulingCard: React.FC<SchedulingCardProps> = ({
@@ -35,45 +38,28 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
     totalWidth,
     verticalIndex,
     scale,
+    columnWidth,
+    columnCount,
 }) => {
     // Calculate the effective start and end dates within the visible timeline
-    const effectiveStartDate = isBefore(startDate, timelineStartDate)
-        ? timelineStartDate
-        : startDate;
-    const effectiveEndDate = isAfter(endDate, timelineEndDate)
-        ? timelineEndDate
-        : endDate;
+    const effectiveStartDate = startDate;
+    const effectiveEndDate = endDate;
 
-    // Calculate position and width based on scale
-    const calculatePosition = () => {
-        const totalTimelineHours = differenceInHours(
-            timelineEndDate,
-            timelineStartDate
-        );
-        const duration = differenceInHours(
-            effectiveEndDate,
-            effectiveStartDate
-        );
+    const { convesionPixels } = useOrderStore();
 
-        // Calculate width as percentage of total width
-        // Calculate width based on grid cell width and hours per grid cell
-        let width;
-        const hoursPerGridCell = scale < 33 
-            ? (scale < 15 ? 1 : scale < 25 ? 2 : 4) // Hour view: 1-4 hours per cell depending on scale
-            : scale < 66 
-                ? 24 // Day view: 24 hours per cell
-                : 24 * 7; // Week view: 168 hours per cell
-                
-        // Calculate grid cell width (totalWidth / number of cells)
-        const gridCellWidth = totalWidth / (totalTimelineHours / hoursPerGridCell);
-        
-        // Calculate width as (grid cell width / hours per grid cell) * duration
-        width = (gridCellWidth / hoursPerGridCell) * duration;
+    const calculateWidth = () => {
+        // Calculate the duration of the order in hours
+        const orderDurationHours =
+            differenceInMilliseconds(effectiveEndDate, effectiveStartDate) /
+            1000 /
+            60 /
+            60;
 
-        return { width };
+        // Return the calculated width, ensuring it's at least a minimum size for visibility
+        return orderDurationHours * 60 * 60 * convesionPixels;
     };
 
-    const { width } = calculatePosition();
+    const width = calculateWidth();
 
     // Calculate top position based on verticalIndex (each card is 82px tall + 16px gap)
     const topPosition = verticalIndex * (82 + 16);

@@ -1,3 +1,14 @@
+/**
+ * TimelineGrid Component
+ *
+ * This component renders a scalable timeline grid that can display time in different granularities:
+ * - Hour view: Shows hours with date indicators for new days
+ * - Day view: Shows days with weekday indicators
+ * - Month view: Shows days grouped into weeks/months
+ *
+ * The component includes a scale slider that allows users to zoom in/out, changing the visible
+ * time range and granularity dynamically.
+ */
 import React, { useEffect, useRef, useState } from "react";
 import {
     format,
@@ -7,14 +18,21 @@ import {
     addDays,
     eachDayOfInterval,
     addMonths,
+    differenceInSeconds,
 } from "date-fns";
-
+import { useOrderStore } from "@/stores/orderStore";
+/**
+ * Props for the TimelineGrid component
+ * @property {string} gridGrain - The base granularity of the grid ("hour", "halfDay", or "day")
+ * @property {function} onScaleChange - Optional callback that fires when the scale changes
+ * @property {function} onColumnWidthChange - Optional callback that fires when column width changes
+ */
 interface TimelineGridProps {
     gridGrain: "hour" | "halfDay" | "day";
     onScaleChange?: (scale: number) => void;
+    onColumnWidthChange?: (columnWidth: number, columnCount: number) => void;
 }
 
-// A group can represent one date or a range of dates
 interface DateGroup {
     start: Date;
     end: Date;
@@ -23,13 +41,57 @@ interface DateGroup {
 const TimelineGrid: React.FC<TimelineGridProps> = ({
     gridGrain,
     onScaleChange,
+    onColumnWidthChange,
 }) => {
+    // Reference to the grid container for measuring available width
     const gridRef = useRef<HTMLDivElement>(null);
+    const { setConversionPixels } = useOrderStore();
+
+    // State for visible date groups and scale value
     const [visibleGroups, setVisibleGroups] = useState<DateGroup[]>([]);
     const [scale, setScale] = useState(50); // Scale from 0 to 100
-    const baseColumnWidth = 50;
+    const [columnWidth, setColumnWidth] = useState(0); // Width of each column in pixels
+    const totalGridWidth = 1299; // Total width of the grid in pixels
 
-    // Calculate dates based on scale value (0-100)
+    /**
+     * Converts seconds to pixels based on the current scale value
+     * This is useful for positioning elements on the timeline
+     *
+     * @param {number} seconds - The number of seconds to convert
+     * @returns {number} - The equivalent width in pixels
+     */
+    const secondsToPixels = (): number => {
+        if (visibleGroups.length === 0) return 0;
+
+        // Calculate the total time span of the visible timeline in seconds
+        const timelineStart = visibleGroups[0].start;
+        const timelineEnd = visibleGroups[visibleGroups.length - 1].end;
+        const totalTimeSpanSeconds = differenceInSeconds(
+            timelineEnd,
+            timelineStart
+        );
+
+        // If there's no time span, return 0 to avoid division by zero
+        if (totalTimeSpanSeconds <= 0) return 0;
+
+        // Calculate the conversion factor (pixels per second)
+        const pixelsPerSecond = totalGridWidth / totalTimeSpanSeconds;
+
+        // Convert the input seconds to pixels
+        return pixelsPerSecond;
+    };
+
+    /**
+     * Calculates the visible date groups based on the current scale value
+     * The scale determines both the time range and the granularity:
+     * - 0-33: Hour view (24-48 hours)
+     * - 34-66: Day view (3-14 days)
+     * - 67-100: Month view (up to 30 days)
+     *
+     * @param {number} availableWidth - The available width for the grid
+     * @param {number} scaleValue - The current scale value (0-100)
+     * @returns {DateGroup[]} - Array of date groups to display
+     */
     const calculateVisibleDates = (
         availableWidth: number,
         scaleValue: number
@@ -92,9 +154,25 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
             }
         }
 
+        // Calculate column width in pixels
+        const newColumnWidth = totalGridWidth / dates.length;
+
+        // Notify parent component about column width change
+        if (onColumnWidthChange && newColumnWidth !== columnWidth) {
+            onColumnWidthChange(newColumnWidth, dates.length);
+        }
+
+        // Update local state
+        setColumnWidth(newColumnWidth);
+
         return dates;
     };
+    useEffect(() => {
+        setConversionPixels(secondsToPixels());
+    }, [scale]);
 
+
+    
     useEffect(() => {
         const updateVisibleGroups = () => {
             if (!gridRef.current) return;
@@ -109,8 +187,9 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         if (gridRef.current) {
             resizeObserver.observe(gridRef.current);
         }
+
         return () => resizeObserver.disconnect();
-    }, [scale]);
+    }, [scale, onColumnWidthChange]);
 
     const generateTimeSlots = () => {
         if (visibleGroups.length === 0) return [];
@@ -180,7 +259,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
 
     return (
         <div className="flex flex-col h-full">
-            {/* Scale Slider */}
+            {/* Scale Slider - Controls the zoom level of the timeline */}
             <div className="px-4 py-2 border-b border-gray-200 shrink-0">
                 <input
                     type="range"
@@ -201,13 +280,13 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                 </div>
             </div>
 
-            {/* Timeline Grid */}
+            {/* Timeline Grid - Shows the date headers and grid lines */}
             <div className="flex-1 overflow-x-auto">
                 <div
                     ref={gridRef}
                     className="relative bg-white w-[1299px] h-full"
                 >
-                    {/* Header with date labels */}
+                    {/* Header with date labels - Shows time indicators */}
                     <div className="flex border-b border-gray-200 transition-all duration-200">
                         <div className="flex" style={{ width: "100%" }}>
                             {visibleGroups.map((group, index) => (
@@ -238,9 +317,9 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                         </div>
                     </div>
 
-                    {/* Grid container */}
+                    {/* Grid container - Contains vertical and horizontal grid lines */}
                     <div className="flex h-[400px] relative">
-                        {/* Vertical grid lines */}
+                        {/* Vertical grid lines - One for each date group */}
                         <div className="flex w-full transition-all duration-200">
                             {visibleGroups.map((_, index) => (
                                 <div
@@ -253,7 +332,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                             ))}
                         </div>
 
-                        {/* Horizontal grid lines */}
+                        {/* Horizontal grid lines - 24 equal divisions */}
                         <div className="absolute inset-x-0 top-0 bottom-0">
                             {[...Array(24)].map((_, index) => (
                                 <div

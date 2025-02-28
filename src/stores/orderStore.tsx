@@ -9,6 +9,7 @@ interface OrderStore {
     selectedOrder: WorkCenterOrder | null;
     isLoading: boolean;
     error: string | null;
+    convesionPixels: number;
 
     // Actions
     setOrders: (orders: WorkCenterOrder[]) => void;
@@ -25,80 +26,75 @@ interface OrderStore {
     setLoading: (isLoading: boolean) => void;
 }
 
-export const useOrderStore = create<OrderStore>(
-    (
-        set: (fn: (state: OrderStore) => Partial<OrderStore>) => void,
-        get: () => OrderStore
-    ) => ({
-        // Initial state
-        orders: [],
-        selectedOrder: null,
-        isLoading: false,
-        error: null,
+export const useOrderStore = create<OrderStore>((set) => ({
+    // Initial state
+    orders: [],
+    selectedOrder: null,
+    isLoading: false,
+    error: null,
+    convesionPixels: 0,
+    // Actions
+    setOrders: (orders: WorkCenterOrder[]) => set({ orders }),
+    setConversionPixels: (pixels: number) => set({ convesionPixels: pixels }),
+    addOrder: (order: WorkCenterOrder) =>
+        set((state) => ({
+            orders: [...state.orders, order],
+        })),
 
-        // Actions
-        setOrders: (orders: WorkCenterOrder[]) => set({ orders }),
+    removeOrder: (orderNumber: string) =>
+        set((state) => ({
+            orders: state.orders.filter(
+                (order) => order.order_number !== orderNumber
+            ),
+            selectedOrder:
+                state.selectedOrder?.order_number === orderNumber
+                    ? null
+                    : state.selectedOrder,
+        })),
 
-        addOrder: (order: WorkCenterOrder) =>
-            set((state) => ({
-                orders: [...state.orders, order],
-            })),
+    updateOrder: (
+        orderNumber: string,
+        updatedOrder: Partial<WorkCenterOrder> //means you only need to provide the fields you want to change, not the entire order object
+    ) =>
+        set((state) => ({
+            orders: state.orders.map((order) =>
+                order.order_number === orderNumber
+                    ? { ...order, ...updatedOrder }
+                    : order
+            ),
+            selectedOrder:
+                state.selectedOrder?.order_number === orderNumber
+                    ? { ...state.selectedOrder, ...updatedOrder }
+                    : state.selectedOrder,
+        })),
 
-        removeOrder: (orderNumber: string) =>
-            set((state) => ({
-                orders: state.orders.filter(
-                    (order) => order.order_number !== orderNumber
-                ),
-                selectedOrder:
-                    state.selectedOrder?.order_number === orderNumber
-                        ? null
-                        : state.selectedOrder,
-            })),
+    selectOrder: (orderNumber: string) =>
+        set((state) => ({
+            selectedOrder:
+                state.orders.find(
+                    (order) => order.order_number === orderNumber
+                ) || null,
+        })),
 
-        updateOrder: (
-            orderNumber: string,
-            updatedOrder: Partial<WorkCenterOrder> //means you only need to provide the fields you want to change, not the entire order object
-        ) =>
-            set((state) => ({
-                orders: state.orders.map((order) =>
-                    order.order_number === orderNumber
-                        ? { ...order, ...updatedOrder }
-                        : order
-                ),
-                selectedOrder:
-                    state.selectedOrder?.order_number === orderNumber
-                        ? { ...state.selectedOrder, ...updatedOrder }
-                        : state.selectedOrder,
-            })),
+    clearSelectedOrder: () => set({ selectedOrder: null }),
 
-        selectOrder: (orderNumber: string) =>
-            set((state) => ({
-                selectedOrder:
-                    state.orders.find(
-                        (order) => order.order_number === orderNumber
-                    ) || null,
-            })),
+    loadDummyOrders: (count: number) => {
+        set({ isLoading: true, error: null });
+        try {
+            const dummyOrders = generateDummyWorkCenterOrders(count);
+            set({ orders: dummyOrders, isLoading: false });
+        } catch (error) {
+            set({
+                error:
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to load dummy orders",
+                isLoading: false,
+            });
+        }
+    },
 
-        clearSelectedOrder: () => set({ selectedOrder: null }),
+    setError: (error: string | null) => set({ error }),
 
-        loadDummyOrders: (count: number) => {
-            set({ isLoading: true, error: null });
-            try {
-                const dummyOrders = generateDummyWorkCenterOrders(count);
-                set({ orders: dummyOrders, isLoading: false });
-            } catch (error) {
-                set({
-                    error:
-                        error instanceof Error
-                            ? error.message
-                            : "Failed to load dummy orders",
-                    isLoading: false,
-                });
-            }
-        },
-
-        setError: (error: string | null) => set({ error }),
-
-        setLoading: (isLoading: boolean) => set({ isLoading }),
-    })
-);
+    setLoading: (isLoading: boolean) => set({ isLoading }),
+}));

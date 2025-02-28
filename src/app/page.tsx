@@ -50,18 +50,28 @@ export default function Home() {
         clearSelectedOrder,
     } = useOrderStore();
     const [isOrdersOpen, setIsOrdersOpen] = useState(true);
-    const [gridGrain, setGridGrain] = useState<"hour" | "halfDay" | "day">(
-        "hour"
-    );
+    // const [gridGrain, setGridGrain] = useState<"hour" | "halfDay" | "day">(
+    //     "hour"
+    // );
     const [scale, setScale] = useState(50);
+    const [columnWidth, setColumnWidth] = useState(0);
+    const [columnCount, setColumnCount] = useState(0);
 
     useEffect(() => {
         loadDummyOrders(3);
     }, [loadDummyOrders]);
 
+    // console.log("orders:", orders);
+
     // Timeline dates (you might want to make these dynamic based on your needs)
     const timelineStartDate = startOfDay(new Date());
     const timelineEndDate = addDays(timelineStartDate, 5);
+
+    // Handle column width changes from TimelineGrid
+    const handleColumnWidthChange = (width: number, count: number) => {
+        setColumnWidth(width);
+        setColumnCount(count);
+    };
 
     // Calculate visible time range based on scale
     const getVisibleTimeRange = () => {
@@ -146,6 +156,9 @@ export default function Home() {
                                 <TimelineGrid
                                     gridGrain="hour"
                                     onScaleChange={setScale}
+                                    onColumnWidthChange={
+                                        handleColumnWidthChange
+                                    }
                                 />
                             </div>
 
@@ -193,6 +206,8 @@ export default function Home() {
                                                 totalWidth={1299 - 64}
                                                 verticalIndex={index}
                                                 scale={scale}
+                                                columnWidth={columnWidth}
+                                                columnCount={columnCount}
                                                 onSelect={() => {
                                                     if (
                                                         selectedOrder?.order_number ===
