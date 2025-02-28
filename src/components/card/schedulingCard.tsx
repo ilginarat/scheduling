@@ -14,8 +14,8 @@ const SchedulingCard: React.FC<SchedulingCardProps> = ({
     index,
 }) => {
     // Extract data from the WorkCenterOrder
-    console.log("SchedulingCard order", order);
-    console.log("SchedulingCard index", index);
+    //console.log("SchedulingCard order", order);
+    //console.log("SchedulingCard index", index);
     const name = order.order_number;
     const targetQuantity = order.target_quantity;
     // const confirmedQuantity = order?.confirmed_quantity;

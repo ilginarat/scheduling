@@ -161,7 +161,7 @@ export default function Home() {
                 <main className="flex-1 bg-gray-100">
                     <div className="flex h-full relative">
                         {/* Main Content Area */}
-                        <div className="flex-1 p-6 flex flex-col">
+                        <div className="flex-1 flex flex-col">
                             <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-6">
                                 <Link href="/" className="hover:text-gray-700">
                                     Home
@@ -201,9 +201,9 @@ export default function Home() {
                                     transition: "width 300ms ease-in-out",
                                 }}
                             >
-                                <div className="h-[60px] flex flex-row justify-end items-center overflow pr-10 ">
+                                <div className="h-[60px] flex flex-row justify-end items-center overflow  ">
                                     <div
-                                        className="h-[10px] w-[100px] bg-blue-600 p-5 flex flex-row justify-center items-center text-white rounded-xl shadow-lg hover:bg-green-500"
+                                        className="h-[10px] w-[100px] bg-blue-600  flex flex-row justify-center items-center text-white rounded-xl shadow-lg hover:bg-green-500"
                                         onClick={() => {
                                             console.log("clicked");
                                         }}

@@ -1,0 +1,55 @@
+---
+description: 
+globs: 
+---
+
+# General Principles
+
+Focus only on the problem specified by the user
+Do not add extra fixes or enhancements unless explicitly requested
+Always inform about errors before making any corrections and wait for confirmation
+
+# Coding Standards
+
+Use descriptive, semantic variable and function names
+Follow state naming convention of var and setVar for state variables and their setters
+Keep code clean and maintainable with appropriate spacing and indentation
+
+# Error Handling
+
+# Identify errors clearly before proposing solutions
+Present the issue, potential fix, and request confirmation before implementing
+After implementing fixes, describe exactly what changes were made
+
+# CSS/Tailwind Usage
+
+Use Tailwind CSS for styling components
+Apply only the minimal necessary Tailwind properties requested by the user
+Include inline comments explaining what each Tailwind class does
+Avoid adding any styling properties that weren't specifically requested
+
+# Documentation
+
+Skip function documentation to maintain code readability
+Keep comments concise and focused on explaining complex logic
+Document component props through TypeScript interfaces rather than comments
+
+# Code Changes
+
+After making significant changes, provide a clear summary of:
+
+What was changed
+Why the change was necessary
+How the change addresses the original problem
+
+# Communication
+
+Use clear, concise language when explaining technical concepts
+Break down complex problems into manageable sections
+Present multiple options for complex issues when appropriate
+
+
+
+
+
+

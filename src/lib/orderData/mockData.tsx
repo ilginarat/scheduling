@@ -22,8 +22,14 @@ export function generateDummyWorkCenterOrder(
     const futureDate = new Date();
     futureDate.setDate(now.getDate() + 7);
 
-    const plannedStart = generateRandomDate(now, futureDate);
-    const plannedEnd = generateRandomDate(new Date(plannedStart), futureDate);
+    const plannedStart = generateRandomDate(
+        new Date(new Date().setDate(new Date().getDate() - 7)),
+        new Date()
+    );
+    const plannedEnd = generateRandomDate(
+        new Date(plannedStart),
+        new Date(new Date().setDate(new Date().getDate() + 7))
+    );
 
     // 40% chance of having updated times different from planned
     const hasUpdatedTimes = Math.random() < 0.4;

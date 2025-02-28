@@ -55,10 +55,10 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
 
         // Calculate the total time span of the visible timeline in seconds
         const timelineStart = visibleGroups[0].start;
+        const timelineEnd = visibleGroups[visibleGroups.length - 1].end;
 
         // setTimelineStartDate(timelineStart);
 
-        const timelineEnd = visibleGroups[visibleGroups.length - 1].end;
         const totalTimeSpanSeconds = differenceInSeconds(
             timelineEnd,
             timelineStart
@@ -78,11 +78,32 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         order: WorkCenterOrder,
         conversionPixels: number
     ): number => {
-        console.log("calculateLeftOffset order", order);
-        const orderStart = new Date(order.planned_start_time).getTime();
-        const timelineStart = new Date(visibleGroups[0]?.start).getTime();
-        const diff = differenceInMilliseconds(orderStart, timelineStart);
+        const orderStart = new Date(order.planned_start_time);
+        const timelineStart = new Date(visibleGroups[0].start);
+        const diff = differenceInSeconds(orderStart, timelineStart);
 
+        console.log("CALCULATE LEFT OFFSET:");
+        console.log("orderStart", orderStart);
+        console.log("conversionPixels:", conversionPixels);
+        console.log("offset in pixels", diff * conversionPixels);
+
+        return diff * conversionPixels;
+    };
+
+    const calculateHeaderOffset = (
+        timelineStart: Date,
+        displayedDate: Date,
+        conversionPixels: number
+    ): number => {
+        const diff = differenceInSeconds(displayedDate, timelineStart);
+        console.log(
+            "header offset:",
+            diff * conversionPixels,
+            "conversionPixels:",
+            conversionPixels,
+            "for",
+            displayedDate
+        );
         return diff * conversionPixels;
     };
 
@@ -94,7 +115,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         const dates: DateGroup[] = [];
         let columnsToShow: number;
 
-        if (scaleValue < 33) {
+        if (scaleValue <= 33) {
             // Hour view
             const totalHours = Math.floor(24 * (1 + scaleValue / 33)); // 24 to 48 hours
             columnsToShow = Math.min(totalHours, 24); // Limit columns and group instead
@@ -169,6 +190,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         const updateVisibleGroups = () => {
             if (!gridRef.current) return;
             const gridWidth = gridRef.current.offsetWidth;
+            // ToDo: Inverse the calculation to have variable width with static dates
             const groups = calculateVisibleDates(gridWidth, scale);
             setVisibleGroups(groups);
         };
@@ -250,11 +272,11 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
     const timeSlots = generateTimeSlots();
 
     useEffect(() => {
-        console.log("scheduledOrders TO SEE ", scheduledOrders);
+        //console.log("scheduledOrders TO SEE ", scheduledOrders);
     }, [scheduledOrders]);
 
-    console.log(" scheduledOrders in the timeline", scheduledOrders);
-
+    //console.log(" scheduledOrders in the timeline", scheduledOrders);
+    const headerOffset = 100;
     return (
         <div className="flex flex-col h-full">
             {/* Scale Slider - Controls the zoom level of the timeline */}
@@ -279,23 +301,31 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
             </div>
 
             {/* Timeline Grid - Shows the date headers and grid lines */}
-            <div className="flex-1 overflow-x-auto">
+            <div className="flex-1 ">
                 <div
                     ref={gridRef}
                     className="relative bg-white w-[1299px] h-full"
                 >
                     {/* Header with date labels - Shows time indicators */}
-                    <div className="flex border-b border-gray-200 transition-all duration-200">
-                        <div className="flex" style={{ width: "100%" }}>
+                    <div className="flex border-b border-gray-200 transition-all duration-200 overflow-visible z-[10]">
+                        <div className=" flex" style={{ width: "100%" }}>
                             {visibleGroups.map((group, index) => (
                                 <div
                                     key={index}
-                                    className="text-center transition-all duration-200"
+                                    className={`absolute text-center transition-all duration-200   overflow-visible -top-7  z-[999]${
+                                        scale < 33 ? "text-left" : "text-center"
+                                    }`}
                                     style={{
-                                        width: `${100 / visibleGroups.length}%`,
-                                        minWidth: "fit-content",
-                                        padding: "0.5rem",
+                                        transform: `translateX(${calculateHeaderOffset(
+                                            visibleGroups[0].start,
+                                            group.start,
+                                            conversionPixels
+                                        )}px)`,
                                     }}
+                                    // style={{
+                                    //     minWidth: "fit-content",
+                                    //     padding: "0.5rem",
+                                    // }}
                                 >
                                     <div
                                         className={`text-sm font-medium whitespace-nowrap ${
@@ -317,13 +347,13 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                             scheduledOrders.map((local_order, index) => (
                                 <div
                                     key={local_order.order_number}
-                                    className="absolute opacity-90"
+                                    className="absolute opacity-90 z-[999]"
                                     style={{
-                                        top: `${index * 100}px`,
-                                        left: `${calculateLeftOffset(
+                                        top: `${index + 1 * 100}px`,
+                                        transform: `translateX(${calculateLeftOffset(
                                             local_order,
                                             conversionPixels
-                                        )}px`,
+                                        )}px)`,
                                     }}
                                 >
                                     <SchedulingCard
@@ -338,13 +368,17 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                     {/* Grid container - Contains vertical and horizontal grid lines */}
                     <div className="flex h-[400px] relative">
                         {/* Vertical grid lines - One for each date group */}
-                        <div className="flex w-full transition-all duration-200">
+                        <div className="flex w-full transition-all duration-200 ">
                             {visibleGroups.map((_, index) => (
                                 <div
                                     key={index}
-                                    className="border-l border-gray-100 first:border-l-0 transition-all duration-200"
+                                    className="absolute border-l border-gray-200  transition-all duration-200 h-full"
                                     style={{
-                                        width: `${100 / visibleGroups.length}%`,
+                                        transform: `translateX(${calculateHeaderOffset(
+                                            visibleGroups[0].start,
+                                            visibleGroups[index].start,
+                                            conversionPixels
+                                        )}px)`,
                                     }}
                                 />
                             ))}
@@ -355,7 +389,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                             {[...Array(24)].map((_, index) => (
                                 <div
                                     key={index}
-                                    className="border-b border-gray-50"
+                                    className="border-b  border-gray-100"
                                     style={{ height: `${100 / 24}%` }}
                                 />
                             ))}
