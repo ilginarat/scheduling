@@ -114,7 +114,9 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         if (scaleValue <= 33) {
             // Hour view
             columnsToShow = Math.ceil(totalTimeSpan / (60 * 60)); // Convert to hours
-            const hoursPerGroup = Math.max(1, Math.ceil(columnsToShow / 24)); // Group hours if too many
+            const hoursPerGroup = Math.max(1, Math.ceil(columnsToShow / 800)); // Group hours if too many
+
+            console.log("hoursPerGroup", hoursPerGroup);
 
             let currentHour = startOfDay(timelineStartDate);
             while (currentHour < timelineEndDate) {
@@ -153,6 +155,14 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
 
         // Update local state
         setColumnWidth(newColumnWidth);
+
+        // Log the dates array for debugging
+        //console.log(
+        //    "Generated date groups:",
+        //    dates.map((group) => ({
+        //        start: format(group.start, "yyyy-MM-dd HH:mm"),
+        //    }))
+        //);
 
         return dates;
     };
@@ -219,7 +229,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                     format(groups[index - 1].start, "yyyy-MM-dd");
 
             return (
-                <span className="inline-flex flex-col h-[38px] justify-center">
+                <span className="inline-flex flex-col h-[88px] justify-center">
                     <span>{startTime}</span>
                     <span className="text-xs text-gray-500 h-4">
                         {isNewDay ? format(group.start, "MMM d") : "\u00A0"}
@@ -229,7 +239,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         } else if (scale < 66) {
             // Day view: show date with day indicator
             return (
-                <span className="inline-flex items-center gap-1 h-[38px] justify-center">
+                <span className="inline-flex items-center gap-1 h-[88px] justify-center">
                     {format(group.start, "d")}
                     <span className="text-gray-500 text-xs">
                         {format(group.start, "EEEEE")}
@@ -239,7 +249,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         } else {
             // Month view: show only start date with day indicator
             return (
-                <span className="inline-flex items-center gap-1 h-[38px] justify-center">
+                <span className="inline-flex items-center gap-1 h-[88px] justify-center">
                     {format(group.start, "d")}
                     <span className="text-gray-500 text-xs">
                         {format(group.start, "EEEEE")}
@@ -258,7 +268,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
     //console.log(" scheduledOrders in the timeline", scheduledOrders);
     const headerOffset = 100;
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-[700px] max-w-[1200px] overflow-x-scroll">
             {/* Scale Slider - Controls the zoom level of the timeline */}
             <div className="px-4 py-2 border-b border-gray-200 shrink-0">
                 <input
@@ -282,92 +292,100 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
 
             {/* Timeline Grid - Shows the date headers and grid lines */}
             <div className="flex-1 ">
-                <div
-                    ref={gridRef}
-                    className="relative bg-white h-full"
-                    style={{ width: `${totalGridWidth}px` }}
-                >
-                    {/* Header with date labels - Shows time indicators */}
-                    <div className="flex border-b border-gray-200 transition-all duration-200 overflow-visible z-[10]">
-                        <div className=" flex" style={{ width: "100%" }}>
-                            {visibleGroups.map((group, index) => (
-                                <div
-                                    key={index}
-                                    className={`absolute text-center transition-all duration-200   overflow-visible -top-7  z-[999]${
-                                        scale < 33 ? "text-left" : "text-center"
-                                    }`}
-                                    style={{
-                                        transform: `translateX(${calculateHeaderOffset(
-                                            group.start,
-                                            conversionPixels
-                                        )}px)`,
-                                    }}
-                                >
+                {/* Container that fills parent width with horizontal scroll */}
+                <div className="w-full h-[600px] overflow-x-auto overflow-y-hidden">
+                    <div
+                        ref={gridRef}
+                        className="relative bg-white h-full inline-block"
+                        style={{
+                            width: `${totalGridWidth}px`,
+                            minWidth: "100%",
+                        }}
+                    >
+                        {/* Header with date labels - Shows time indicators */}
+                        <div className="flex border-b border-gray-200 transition-all duration-200 overflow-visible z-[9999]">
+                            <div className="flex " style={{ width: "100%" }}>
+                                {visibleGroups.map((group, index) => (
                                     <div
-                                        className={`text-sm font-medium whitespace-nowrap ${
+                                        key={index}
+                                        className={` absolute text-center transition-all duration-200 overflow-visible -top-7 ${
                                             scale < 33
                                                 ? "text-left"
                                                 : "text-center"
                                         }`}
+                                        style={{
+                                            transform: `translateX(${calculateHeaderOffset(
+                                                group.start,
+                                                conversionPixels
+                                            )}px)`,
+                                        }}
                                     >
-                                        {formatDateLabel(
-                                            group,
-                                            index,
-                                            visibleGroups
-                                        )}
+                                        <div
+                                            className={`text-sm font-medium whitespace-nowrap z-[9999] ${
+                                                scale < 33
+                                                    ? "text-left"
+                                                    : "text-center"
+                                            }`}
+                                        >
+                                            {formatDateLabel(
+                                                group,
+                                                index,
+                                                visibleGroups
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                            {scheduledOrders.length > 0 &&
+                                scheduledOrders.map((local_order, index) => (
+                                    <div
+                                        key={local_order.order_number}
+                                        className="absolute opacity-90 z-[999]"
+                                        style={{
+                                            top: `${index + 1 * 100}px`,
+                                            transform: `translateX(${calculateLeftOffset(
+                                                local_order,
+                                                conversionPixels
+                                            )}px)`,
+                                        }}
+                                    >
+                                        <SchedulingCard
+                                            order={local_order}
+                                            verticalIndex={index}
+                                            index={index}
+                                        />
+                                    </div>
+                                ))}
                         </div>
-                        {scheduledOrders.length > 0 &&
-                            scheduledOrders.map((local_order, index) => (
-                                <div
-                                    key={local_order.order_number}
-                                    className="absolute opacity-90 z-[999]"
-                                    style={{
-                                        top: `${index + 1 * 100}px`,
-                                        transform: `translateX(${calculateLeftOffset(
-                                            local_order,
-                                            conversionPixels
-                                        )}px)`,
-                                    }}
-                                >
-                                    <SchedulingCard
-                                        order={local_order}
-                                        verticalIndex={index}
-                                        index={index}
+
+                        {/* Grid container - Contains vertical and horizontal grid lines */}
+                        <div className="flex h-[400px] relative">
+                            {/* Vertical grid lines - One for each date group */}
+                            <div className="flex w-full transition-all duration-200">
+                                {visibleGroups.map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className="absolute border-l border-gray-200 transition-all duration-200 h-full"
+                                        style={{
+                                            transform: `translateX(${calculateHeaderOffset(
+                                                visibleGroups[index].start,
+                                                conversionPixels
+                                            )}px)`,
+                                        }}
                                     />
-                                </div>
-                            ))}
-                    </div>
+                                ))}
+                            </div>
 
-                    {/* Grid container - Contains vertical and horizontal grid lines */}
-                    <div className="flex h-[400px] relative">
-                        {/* Vertical grid lines - One for each date group */}
-                        <div className="flex w-full transition-all duration-200 ">
-                            {visibleGroups.map((_, index) => (
-                                <div
-                                    key={index}
-                                    className="absolute border-l border-gray-200  transition-all duration-200 h-full"
-                                    style={{
-                                        transform: `translateX(${calculateHeaderOffset(
-                                            visibleGroups[index].start,
-                                            conversionPixels
-                                        )}px)`,
-                                    }}
-                                />
-                            ))}
-                        </div>
-
-                        {/* Horizontal grid lines - 24 equal divisions */}
-                        <div className="absolute inset-x-0 top-0 bottom-0">
-                            {[...Array(24)].map((_, index) => (
-                                <div
-                                    key={index}
-                                    className="border-b  border-gray-100"
-                                    style={{ height: `${100 / 24}%` }}
-                                />
-                            ))}
+                            {/* Horizontal grid lines - 24 equal divisions */}
+                            <div className="absolute inset-x-0 top-0 bottom-0">
+                                {[...Array(24)].map((_, index) => (
+                                    <div
+                                        key={index}
+                                        className="border-b border-gray-100"
+                                        style={{ height: `${100 / 24}%` }}
+                                    />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
