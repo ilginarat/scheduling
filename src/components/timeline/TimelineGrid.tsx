@@ -111,12 +111,14 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         );
         let columnsToShow: number;
 
-        if (scaleValue <= 33) {
+        if (scaleValue <= 43) {
             // Hour view
             columnsToShow = Math.ceil(totalTimeSpan / (60 * 60)); // Convert to hours
-            const hoursPerGroup = Math.max(1, Math.ceil(columnsToShow / 800)); // Group hours if too many
+            const calc = Math.ceil((columnsToShow * scaleValue) / 20000);
+            const hoursPerGroup = Math.max(1, calc); // Group hours if too many
 
-            console.log("hoursPerGroup", hoursPerGroup);
+            //console.log("hoursPerGroup", hoursPerGroup);
+            //console.log("calc: ", calc);
 
             let currentHour = startOfDay(timelineStartDate);
             while (currentHour < timelineEndDate) {
@@ -130,14 +132,20 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         } else {
             // Day view
             columnsToShow = Math.ceil(totalTimeSpan / (60 * 60 * 24)); // Convert to days
+            const calc = Math.ceil((columnsToShow * scaleValue) / 5000);
+            const daysPerGroup = Math.max(1, calc); // Group hours if too many
+
+            //console.log("daysPerGroup", daysPerGroup);
+            //console.log("calc: ", calc);
 
             let currentDay = startOfDay(timelineStartDate);
             while (currentDay < timelineEndDate) {
+                const groupEndDay = addDays(currentDay, daysPerGroup - 1);
                 dates.push({
                     start: currentDay,
-                    end: currentDay,
+                    end: groupEndDay,
                 });
-                currentDay = addDays(currentDay, 1);
+                currentDay = addDays(currentDay, daysPerGroup);
             }
         }
 
@@ -220,7 +228,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         index: number,
         groups: DateGroup[]
     ) => {
-        if (scale < 33) {
+        if (scale <= 43) {
             // Hour view: show only start time
             const startTime = format(group.start, "H");
             const isNewDay =
