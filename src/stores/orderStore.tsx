@@ -12,7 +12,9 @@ interface OrderStore {
     error: string | null;
     conversionPixels: number;
     timelineStartDate: Date;
+    timelineEndDate: Date;
     leftOffset: number;
+    totalGridWidth: number;
 
     // Actions
     setOrders: (orders: WorkCenterOrder[]) => void;
@@ -31,7 +33,8 @@ interface OrderStore {
     setConversionPixels: (pixels: number) => void;
     setLeftOffset: (offset: number) => void;
     setTimelineStartDate: (date: Date) => void;
-
+    setTimelineEndDate: (date: Date) => void;
+    setTotalGridWidth: (width: number) => void;
     scheduleOrder: (orderNumber: string) => void;
     unscheduleOrder: (orderNumber: string) => void;
     moveAllToScheduled: () => void;
@@ -50,8 +53,9 @@ export const useOrderStore = create<OrderStore>((set) => ({
     error: null,
     conversionPixels: 0,
     leftOffset: 0,
+    totalGridWidth: 1299,
     timelineStartDate: new Date(),
-
+    timelineEndDate: new Date(),
     // Actions
     setOrders: (orders: WorkCenterOrder[]) =>
         set({
@@ -64,6 +68,7 @@ export const useOrderStore = create<OrderStore>((set) => ({
     setConversionPixels: (pixels: number) => set({ conversionPixels: pixels }),
     setLeftOffset: (offset: number) => set({ leftOffset: offset }),
     setTimelineStartDate: (date: Date) => set({ timelineStartDate: date }),
+    setTimelineEndDate: (date: Date) => set({ timelineEndDate: date }),
     setScheduledOrders: (orders: WorkCenterOrder[]) =>
         set({ scheduledOrders: orders }),
     setUnscheduledOrders: (orders: WorkCenterOrder[]) =>
@@ -224,4 +229,6 @@ export const useOrderStore = create<OrderStore>((set) => ({
             ],
             scheduledOrders: [],
         })),
+
+    setTotalGridWidth: (width: number) => set({ totalGridWidth: width }),
 }));

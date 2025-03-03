@@ -66,39 +66,11 @@ export default function Home() {
         loadDummyOrders(3);
     }, [loadDummyOrders]);
 
-    // Timeline dates (you might want to make these dynamic based on your needs)
-    const timelineStartDate = startOfDay(new Date());
-    const timelineEndDate = addDays(timelineStartDate, 5);
-
     // Handle column width changes from TimelineGrid
     const handleColumnWidthChange = (width: number, count: number) => {
         setColumnWidth(width);
         setColumnCount(count);
     };
-
-    // Calculate visible time range based on scale
-    const getVisibleTimeRange = () => {
-        if (scale < 33) {
-            // Hour view: 24 to 48 hours
-            const totalHours = Math.floor(24 * (1 + scale / 33));
-            return addDays(timelineStartDate, Math.ceil(totalHours / 24));
-        } else if (scale < 66) {
-            // Day view: 3 to 14 days
-            const minDays = 3;
-            const maxDays = 14;
-            const normalizedScale = (scale - 33) / 33;
-            const days = Math.floor(
-                minDays + (maxDays - minDays) * normalizedScale
-            );
-            return addDays(timelineStartDate, days);
-        } else {
-            // Month view: up to 30 days
-            const days = Math.floor(30 * (scale / 100));
-            return addDays(timelineStartDate, days);
-        }
-    };
-
-    const visibleEndDate = getVisibleTimeRange();
 
     // Sort orders by start date
     const sortedScheduledOrders = [...scheduledOrders].sort(

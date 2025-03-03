@@ -8,7 +8,6 @@ import {
     startOfDay,
     endOfDay,
     addDays,
-    differenceInMilliseconds,
     differenceInSeconds,
 } from "date-fns";
 
@@ -42,26 +41,24 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         scheduledOrders,
         unscheduledOrders,
         conversionPixels,
+        setTotalGridWidth,
+        totalGridWidth,
+        timelineStartDate,
+        setTimelineEndDate,
+        timelineEndDate,
     } = useOrderStore();
 
     // State for visible date groups and scale value
     const [visibleGroups, setVisibleGroups] = useState<DateGroup[]>([]);
     const [scale, setScale] = useState(50); // Scale from 0 to 100
     const [columnWidth, setColumnWidth] = useState(0); // Width of each column in pixels
-    const totalGridWidth = 1299; // Total width of the grid in pixels
 
     const secondsToPixels = (): number => {
         if (visibleGroups.length === 0) return 0;
 
-        // Calculate the total time span of the visible timeline in seconds
-        const timelineStart = visibleGroups[0].start;
-        const timelineEnd = visibleGroups[visibleGroups.length - 1].end;
-
-        // setTimelineStartDate(timelineStart);
-
         const totalTimeSpanSeconds = differenceInSeconds(
-            timelineEnd,
-            timelineStart
+            timelineEndDate,
+            timelineStartDate
         );
 
         // If there's no time span, return 0 to avoid division by zero
@@ -79,100 +76,77 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         conversionPixels: number
     ): number => {
         const orderStart = new Date(order.planned_start_time);
-        const timelineStart = new Date(visibleGroups[0].start);
-        const diff = differenceInSeconds(orderStart, timelineStart);
+        const diff = differenceInSeconds(orderStart, timelineStartDate);
 
-        console.log("CALCULATE LEFT OFFSET:");
-        console.log("orderStart", orderStart);
-        console.log("conversionPixels:", conversionPixels);
-        console.log("offset in pixels", diff * conversionPixels);
+        //console.log("CALCULATE LEFT OFFSET:");
+        //console.log("orderStart", orderStart);
+        //console.log("conversionPixels:", conversionPixels);
+        //console.log("offset in pixels", diff * conversionPixels);
 
         return diff * conversionPixels;
     };
 
     const calculateHeaderOffset = (
-        timelineStart: Date,
         displayedDate: Date,
         conversionPixels: number
     ): number => {
-        const diff = differenceInSeconds(displayedDate, timelineStart);
-        console.log(
-            "header offset:",
-            diff * conversionPixels,
-            "conversionPixels:",
-            conversionPixels,
-            "for",
-            displayedDate
-        );
+        const diff = differenceInSeconds(displayedDate, timelineStartDate);
+        //console.log(
+        //    "header offset:",
+        //    diff * conversionPixels,
+        //    "conversionPixels:",
+        //    conversionPixels,
+        //    "for",
+        //    displayedDate
+        //);
         return diff * conversionPixels;
     };
 
-    const calculateVisibleDates = (
-        availableWidth: number,
-        scaleValue: number
-    ) => {
-        const today = startOfDay(new Date());
+    const returnVisibleDates = (scaleValue: number) => {
+        // If start and end dates are provided, use them
         const dates: DateGroup[] = [];
+        const totalTimeSpan = differenceInSeconds(
+            timelineEndDate,
+            timelineStartDate
+        );
         let columnsToShow: number;
 
         if (scaleValue <= 33) {
             // Hour view
-            const totalHours = Math.floor(24 * (1 + scaleValue / 33)); // 24 to 48 hours
-            columnsToShow = Math.min(totalHours, 24); // Limit columns and group instead
-            const hoursPerGroup = Math.max(
-                1,
-                Math.ceil(totalHours / columnsToShow)
-            );
-            const startHour = addHours(today, -Math.floor(totalHours / 2));
+            columnsToShow = Math.ceil(totalTimeSpan / (60 * 60)); // Convert to hours
+            const hoursPerGroup = Math.max(1, Math.ceil(columnsToShow / 24)); // Group hours if too many
 
-            for (let i = 0; i < totalHours; i += hoursPerGroup) {
-                const groupStartHour = addHours(startHour, i);
-                const groupEndHour = addHours(
-                    groupStartHour,
-                    hoursPerGroup - 1
-                );
+            let currentHour = startOfDay(timelineStartDate);
+            while (currentHour < timelineEndDate) {
+                const groupEndHour = addHours(currentHour, hoursPerGroup - 1);
                 dates.push({
-                    start: groupStartHour,
+                    start: currentHour,
                     end: groupEndHour,
                 });
-            }
-        } else if (scaleValue < 66) {
-            // Day view - smooth transition from 3 to 14 days
-            const minDays = 3;
-            const maxDays = 14;
-            const normalizedScale = (scaleValue - 33) / 33; // 0 to 1
-            columnsToShow = Math.floor(
-                minDays + (maxDays - minDays) * normalizedScale
-            );
-            const startDay = addDays(today, -Math.floor(columnsToShow / 2));
-
-            for (let i = 0; i < columnsToShow; i++) {
-                const dayDate = addDays(startDay, i);
-                dates.push({
-                    start: dayDate,
-                    end: dayDate,
-                });
+                currentHour = addHours(currentHour, hoursPerGroup);
             }
         } else {
-            // Month view
-            columnsToShow = Math.floor(30 * (scaleValue / 100)); // up to 30 days
-            const startDay = addDays(today, -Math.floor(columnsToShow / 2));
-            const daysPerGroup = Math.max(1, Math.floor(columnsToShow / 10));
+            // Day view
+            columnsToShow = Math.ceil(totalTimeSpan / (60 * 60 * 24)); // Convert to days
 
-            for (let i = 0; i < columnsToShow; i += daysPerGroup) {
-                const groupStart = addDays(startDay, i);
-                const groupEnd = addDays(groupStart, daysPerGroup - 1);
+            let currentDay = startOfDay(timelineStartDate);
+            while (currentDay < timelineEndDate) {
                 dates.push({
-                    start: groupStart,
-                    end: groupEnd,
+                    start: currentDay,
+                    end: currentDay,
                 });
+                currentDay = addDays(currentDay, 1);
             }
         }
 
-        // Calculate column width in pixels
-        const newColumnWidth = totalGridWidth / dates.length;
+        // Calculate the required grid width based on the date range and scale
+        const requiredGridWidth = dates.length * (50 + scaleValue); // Base width plus scale factor
+
+        // Update the total grid width
+        setTotalGridWidth(requiredGridWidth);
 
         // Notify parent component about column width change
+        const newColumnWidth = requiredGridWidth / dates.length;
         if (onColumnWidthChange && newColumnWidth !== columnWidth) {
             onColumnWidthChange(newColumnWidth, dates.length);
         }
@@ -182,16 +156,22 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
 
         return dates;
     };
+
+    useEffect(() => {
+        setTimelineStartDate(addDays(new Date(), -3));
+        setTimelineEndDate(addDays(new Date(), 60));
+    }, []);
+
     useEffect(() => {
         setConversionPixels(secondsToPixels());
-    }, [scale]);
+    }, [scale, visibleGroups]);
 
     useEffect(() => {
         const updateVisibleGroups = () => {
             if (!gridRef.current) return;
-            const gridWidth = gridRef.current.offsetWidth;
-            // ToDo: Inverse the calculation to have variable width with static dates
-            const groups = calculateVisibleDates(gridWidth, scale);
+
+            // Use provided start and end dates if available
+            const groups = returnVisibleDates(scale);
             setVisibleGroups(groups);
         };
 
@@ -203,7 +183,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         }
 
         return () => resizeObserver.disconnect();
-    }, [scale, onColumnWidthChange]);
+    }, [scale]);
 
     const generateTimeSlots = () => {
         if (visibleGroups.length === 0) return [];
@@ -304,7 +284,8 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
             <div className="flex-1 ">
                 <div
                     ref={gridRef}
-                    className="relative bg-white w-[1299px] h-full"
+                    className="relative bg-white h-full"
+                    style={{ width: `${totalGridWidth}px` }}
                 >
                     {/* Header with date labels - Shows time indicators */}
                     <div className="flex border-b border-gray-200 transition-all duration-200 overflow-visible z-[10]">
@@ -317,15 +298,10 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                                     }`}
                                     style={{
                                         transform: `translateX(${calculateHeaderOffset(
-                                            visibleGroups[0].start,
                                             group.start,
                                             conversionPixels
                                         )}px)`,
                                     }}
-                                    // style={{
-                                    //     minWidth: "fit-content",
-                                    //     padding: "0.5rem",
-                                    // }}
                                 >
                                     <div
                                         className={`text-sm font-medium whitespace-nowrap ${
@@ -375,7 +351,6 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
                                     className="absolute border-l border-gray-200  transition-all duration-200 h-full"
                                     style={{
                                         transform: `translateX(${calculateHeaderOffset(
-                                            visibleGroups[0].start,
                                             visibleGroups[index].start,
                                             conversionPixels
                                         )}px)`,
