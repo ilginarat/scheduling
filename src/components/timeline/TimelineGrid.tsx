@@ -111,10 +111,10 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         );
         let columnsToShow: number;
 
-        if (scaleValue <= 43) {
+        if (scaleValue <= 53) {
             // Hour view
             columnsToShow = Math.ceil(totalTimeSpan / (60 * 60)); // Convert to hours
-            const calc = Math.ceil((columnsToShow * scaleValue) / 20000);
+            const calc = Math.ceil((columnsToShow * scaleValue) / 15000);
             const hoursPerGroup = Math.max(1, calc); // Group hours if too many
 
             //console.log("hoursPerGroup", hoursPerGroup);
@@ -228,7 +228,7 @@ const TimelineGrid: React.FC<TimelineGridProps> = ({
         index: number,
         groups: DateGroup[]
     ) => {
-        if (scale <= 43) {
+        if (scale <= 53) {
             // Hour view: show only start time
             const startTime = format(group.start, "H");
             const isNewDay =
